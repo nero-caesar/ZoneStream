@@ -1,0 +1,150 @@
+.auth-story {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 100vh;
+  min-height: 100svh;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 42px clamp(38px, 5.5vw, 110px) 48px;
+  background:
+    radial-gradient(ellipse at 95% 108%, rgba(54, 34, 121, 0.47), transparent 48%),
+    linear-gradient(145deg, #0b0d20 0%, #10122d 69%, #12102d 100%);
+}
+
+.story-rings {
+  position: absolute;
+  z-index: -1;
+  right: -480px;
+  bottom: -550px;
+  width: 950px;
+  height: 950px;
+  border: 1px solid rgba(175, 169, 255, 0.12);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 84px rgba(175, 169, 255, 0.035),
+    0 0 0 168px rgba(175, 169, 255, 0.035),
+    0 0 0 252px rgba(175, 169, 255, 0.035);
+  pointer-events: none;
+}
+
+.story-top,
+.story-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 78px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #aeb3cc;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.back-link:hover {
+  color: white;
+}
+
+.story-message {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 700px);
+  margin-top: clamp(115px, 15vh, 177px);
+}
+
+.story-message .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+
+.story-message h1 {
+  margin: 38px 0 23px;
+  font-size: clamp(52px, 4.55vw, 88px);
+  font-weight: 760;
+  letter-spacing: -0.09em;
+  line-height: 0.99;
+}
+
+.story-message h1 span {
+  color: var(--color-coral);
+}
+
+.story-message p {
+  max-width: 380px;
+  margin: 0;
+  color: #b7bbd2;
+  font-size: 16px;
+  line-height: 1.86;
+}
+
+.story-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: auto;
+  padding-top: 45px;
+  color: #888eae;
+  font-size: 11px;
+}
+
+.story-footer .eyebrow-rule {
+  width: 32px;
+}
+
+@media (max-width: 1150px) {
+  .auth-story {
+    padding-inline: clamp(30px, 4vw, 54px);
+  }
+
+  .story-message h1 {
+    font-size: clamp(50px, 5vw, 65px);
+  }
+}
+
+@media (max-width: 760px) {
+  .auth-story {
+    min-height: 0;
+    padding: 27px 25px 31px;
+  }
+
+  .story-rings {
+    right: -600px;
+    bottom: -760px;
+  }
+
+  .back-link {
+    margin-top: 32px;
+    font-size: 12px;
+  }
+
+  .story-message {
+    margin-top: 48px;
+  }
+
+  .story-message .eyebrow {
+    font-size: 9px;
+  }
+
+  .story-message h1 {
+    margin: 24px 0 14px;
+    font-size: clamp(43px, 10vw, 60px);
+  }
+
+  .story-message p {
+    max-width: 480px;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .story-footer {
+    display: none;
+  }
+}

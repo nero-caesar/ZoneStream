@@ -1,0 +1,22 @@
+.brand {
+  display: block;
+  width: 220px;
+  height: 64px;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.brand-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (max-width: 760px) {
+  .brand {
+    width: 184px;
+    height: 54px;
+  }
+}

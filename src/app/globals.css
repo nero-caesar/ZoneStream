@@ -1,0 +1,82 @@
+:root {
+  /* ZoneStream brand palette */
+  --color-blue: #0016BE;
+  --color-purple: #7650B8;
+  --color-coral: #F79468;
+
+  /* Backgrounds */
+  --color-background: #0B0B0F;
+  --color-background-secondary: #111116;
+  --color-background-card: #16161D;
+
+  /* Text */
+  --color-white: #FFFFFF;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #A6A6B0;
+  --color-text-muted: #70707A;
+
+  /* Borders and status */
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-border-light: rgba(255, 255, 255, 0.16);
+  --color-success: #22C55E;
+  --color-danger: #EF4444;
+  --color-warning: #F59E0B;
+
+  /* Glows and surfaces */
+  --color-blue-glow: rgba(0, 22, 190, 0.35);
+  --color-purple-glow: rgba(118, 80, 184, 0.30);
+  --color-coral-glow: rgba(247, 148, 104, 0.25);
+  --card-background: rgba(255, 255, 255, 0.05);
+  --card-background-hover: rgba(255, 255, 255, 0.08);
+
+  /* Shape and motion */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(247, 148, 104, 0.85);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgba(247, 148, 104, 0.35);
+}

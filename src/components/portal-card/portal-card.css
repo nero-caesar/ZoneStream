@@ -1,0 +1,113 @@
+.portal-card {
+  display: flex;
+  min-height: 130px;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 23px;
+  border: 1px solid rgba(147, 155, 225, 0.27);
+  border-radius: 21px;
+  color: white;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.portal-card-individual {
+  background: linear-gradient(125deg, rgba(0, 22, 190, 0.43), rgba(13, 29, 96, 0.42));
+}
+
+.portal-card-church {
+  background: linear-gradient(125deg, rgba(118, 80, 184, 0.43), rgba(43, 36, 79, 0.57));
+}
+
+.portal-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(199, 199, 255, 0.5);
+  box-shadow: 0 15px 38px rgba(3, 4, 24, 0.24);
+}
+
+.portal-icon {
+  display: grid;
+  width: 57px;
+  height: 57px;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 16px;
+  background: rgba(166, 176, 255, 0.18);
+  color: white;
+}
+
+.portal-card-copy {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.portal-title {
+  font-size: 17px;
+  font-weight: 680;
+}
+
+.portal-description {
+  color: #c0c4dc;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.portal-chevron {
+  flex: 0 0 auto;
+  color: #a2a8ca;
+  transition: transform var(--transition-fast);
+}
+
+.portal-card:hover .portal-chevron {
+  transform: translateX(3px);
+}
+
+@media (max-width: 1150px) {
+  .portal-card {
+    gap: 13px;
+    padding-inline: 17px;
+  }
+}
+
+@media (max-width: 760px) {
+  .portal-card {
+    min-height: 99px;
+    gap: 15px;
+    padding: 14px 16px;
+    border-radius: 16px;
+  }
+
+  .portal-icon {
+    width: 49px;
+    height: 49px;
+    border-radius: 14px;
+  }
+
+  .portal-description {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 420px) {
+  .portal-card {
+    gap: 12px;
+    padding-inline: 13px;
+  }
+
+  .portal-icon {
+    width: 45px;
+    height: 45px;
+  }
+
+  .portal-title {
+    font-size: 15px;
+  }
+
+  .portal-chevron {
+    width: 18px;
+  }
+}
