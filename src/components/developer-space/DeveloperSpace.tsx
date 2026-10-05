@@ -2,19 +2,17 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { FiAlertTriangle, FiArrowLeft, FiCheck, FiClock, FiExternalLink, FiLock, FiLogOut, FiRadio, FiShield, FiUnlock, FiUsers, FiVideo } from "react-icons/fi";
+import { FiAlertTriangle, FiArrowLeft, FiCheck, FiExternalLink, FiLock, FiLogOut, FiRadio, FiShield, FiUnlock, FiUsers, FiVideo } from "react-icons/fi";
 import Brand from "../brand/Brand";
 import DeveloperSpecialAccess from "./DeveloperSpecialAccess";
 import "./developer-space.css";
 
 type PageMode = "setup" | "login" | "dashboard" | "unavailable";
-type ResetRequest = { id: string; status: string; requestedAt: string; expiresAt: number };
 type OwnerActivity = { id: string; action: string; label?: string; at: string };
 type OwnerRecording = { id: string; title: string; fileName: string; mimeType: string; sizeBytes: number; createdAt: number; downloadUrl: string };
 type DashboardData = {
   program: { roomName: string; title: string; startedAt: string } | null;
   viewerPaused: boolean;
-  requests: ResetRequest[];
   activity: OwnerActivity[];
   recordings?: OwnerRecording[];
   recordingsAvailable?: boolean;
@@ -25,7 +23,6 @@ export default function DeveloperSpace({ initialMode }: { initialMode: PageMode 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [busyRequest, setBusyRequest] = useState("");
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -104,29 +101,6 @@ export default function DeveloperSpace({ initialMode }: { initialMode: PageMode 
     setNotice("You have signed out of Developer Space.");
   }
 
-  async function decideReset(requestId: string, decision: "approve" | "reject") {
-    setBusyRequest(requestId);
-    setError("");
-    setNotice("");
-    try {
-      const response = await fetch(`/api/developer/reset-requests/${encodeURIComponent(requestId)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ decision }),
-      });
-      const result = await response.json() as { error?: string; status?: string };
-      if (!response.ok) throw new Error(result.error || "That reset request could not be updated.");
-      setNotice(decision === "approve"
-        ? "Approved. A studio password reset link was emailed to the configured recovery address."
-        : "The studio password reset request was declined.");
-      await loadDashboard();
-    } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "That reset request could not be updated.");
-    } finally {
-      setBusyRequest("");
-    }
-  }
-
   async function toggleViewerPause() {
     if (!dashboard) return;
     const nextPaused = !dashboard.viewerPaused;
@@ -184,11 +158,7 @@ export default function DeveloperSpace({ initialMode }: { initialMode: PageMode 
     : "";
 
   function describeOwnerAction(action: string) {
-    const labels: Record<string, string> = {
-      studio_reset_approved: "Approved a studio password reset",
-      studio_reset_rejected: "Declined a studio password reset",
-    };
-    return labels[action] || "Updated a platform setting";
+    return action === "zonal_password_reset_email_sent" ? "Sent a Zonal Studio password reset link" : "Updated a platform setting";
   }
 
   return (
@@ -207,7 +177,7 @@ export default function DeveloperSpace({ initialMode }: { initialMode: PageMode 
               <div>
                 <span className="developer-kicker"><FiShield aria-hidden="true" /> OWNER ACCESS</span>
                 <h1 id="developer-title">Developer Space</h1>
-                <p>Private platform controls and approval requests.</p>
+                <p>Private platform controls for ZoneStream.</p>
               </div>
               <button className="developer-signout" type="button" onClick={() => void signOut()}><FiLogOut aria-hidden="true" /> Sign out</button>
             </div>
@@ -237,39 +207,6 @@ export default function DeveloperSpace({ initialMode }: { initialMode: PageMode 
             </div>
 
             <DeveloperSpecialAccess />
-
-            <section className="developer-requests" aria-labelledby="developer-requests-title">
-              <div className="developer-requests-heading">
-                <div><span className="developer-card-eyebrow">OWNER INBOX</span><h2 id="developer-requests-title">Studio password requests</h2></div>
-                <span className="developer-request-count">{dashboard.requests.filter((item) => item.status === "pending").length} waiting</span>
-              </div>
-              <p className="developer-requests-description">Approving sends a reset link to the private studio recovery email. If email delivery is not configured, the request stays available to retry.</p>
-
-              {dashboard.requests.length ? (
-                <ul className="developer-request-list">
-                  {dashboard.requests.map((item) => {
-                    const status = item.status;
-                    return (
-                      <li className="developer-request" key={item.id}>
-                        <div className="developer-request-main">
-                          <span className="developer-request-icon"><FiClock aria-hidden="true" /></span>
-                          <span><strong>Zonal Church studio</strong><small>Requested {item.requestedAt ? new Date(item.requestedAt).toLocaleString() : "recently"}</small></span>
-                        </div>
-                        <span className={`developer-request-status is-${status}`}>{status.replaceAll("-", " ")}</span>
-                        {status === "pending" ? (
-                          <div className="developer-request-actions">
-                            <button className="developer-approve" type="button" onClick={() => void decideReset(item.id, "approve")} disabled={Boolean(busyRequest)}><FiCheck aria-hidden="true" /> Approve</button>
-                            <button className="developer-reject" type="button" onClick={() => void decideReset(item.id, "reject")} disabled={Boolean(busyRequest)}>Reject</button>
-                          </div>
-                        ) : null}
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <div className="developer-empty-inbox"><FiShield aria-hidden="true" /><span><strong>No reset requests yet</strong><small>Requests from the studio login will show here for your decision.</small></span></div>
-              )}
-            </section>
 
             <section className="developer-recordings" aria-labelledby="developer-recordings-title">
               <div className="developer-requests-heading">

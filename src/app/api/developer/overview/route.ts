@@ -2,7 +2,6 @@ import { RoomServiceClient } from "livekit-server-sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { isSameOriginRequest } from "../../../../lib/auth/server";
 import { verifyDeveloperRequest } from "../../../../lib/auth/developer-space";
-import { listZonalResetRequests } from "../../../../lib/auth/zonal-reset-requests";
 import { getFirebaseAdmin } from "../../../../lib/firebase/admin";
 import { recordPlatformActivity } from "../../../../lib/audit/platform-activity";
 import { disconnectRoomParticipants } from "../../../../lib/stream/disconnect-participants";
@@ -14,10 +13,9 @@ export async function GET(request: NextRequest) {
   if (!await verifyDeveloperRequest(request)) return NextResponse.json({ error: "Sign in to Developer Space." }, { status: 401 });
   try {
     const { firestore } = getFirebaseAdmin();
-    const [program, controls, requests, audit, platformActivity] = await Promise.all([
+    const [program, controls, audit, platformActivity] = await Promise.all([
       firestore.collection("programs").doc("current").get(),
       firestore.collection("platformControl").doc("access").get(),
-      listZonalResetRequests(),
       firestore.collection("developerAuditLog").orderBy("at", "desc").limit(40).get(),
       firestore.collection("platformActivity").orderBy("at", "desc").limit(80).get(),
     ]);
@@ -31,7 +29,6 @@ export async function GET(request: NextRequest) {
         ? { roomName: current.roomName, title: typeof current.title === "string" ? current.title : "Zonal Church Live Service", startedAt: String(current.startedAt ?? "") }
         : null,
       viewerPaused: controls.exists && controls.get("viewerPaused") === true,
-      requests,
       activity,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch {
