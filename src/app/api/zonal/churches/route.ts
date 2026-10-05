@@ -31,31 +31,43 @@ export async function GET(request: NextRequest) {
     const snapshot = await firestore.collection("accounts").where("role", "==", "church").get();
     const connectedChurches = new Map<string, string>();
     let allowedChurchKeys: Set<string> | null = null;
-    let roomName = request.nextUrl.searchParams.get("roomName");
-    if (!roomName) {
-      const currentProgram = await firestore.collection("programs").doc("current").get();
-      const savedRoomName = currentProgram.get("roomName");
-      if (typeof savedRoomName === "string") roomName = savedRoomName;
-    }
-    const { LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET } = process.env;
-    if (roomName && /^[a-z0-9][a-z0-9-]{5,79}$/i.test(roomName) && LIVEKIT_URL && LIVEKIT_API_KEY && LIVEKIT_API_SECRET) {
-      const roomService = new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
-      const [activeRoom] = await roomService.listRooms([roomName]);
-      if (activeRoom) {
-        const policy = parseStreamAccessPolicy(activeRoom.metadata);
-        allowedChurchKeys = new Set(policy.blockedChurchAccessKeys);
+    let liveAccessStatusKnown = false;
+    try {
+      let roomName = request.nextUrl.searchParams.get("roomName");
+      if (!roomName) {
+        const currentProgram = await firestore.collection("programs").doc("current").get();
+        const savedRoomName = currentProgram.get("roomName");
+        if (typeof savedRoomName === "string") roomName = savedRoomName;
       }
-      const participants = await roomService.listParticipants(roomName);
-      for (const participant of participants) {
-        try {
-          const metadata = JSON.parse(participant.metadata || "{}") as { audienceType?: unknown; accountUid?: unknown };
-          if (metadata.audienceType !== "church" || typeof metadata.accountUid !== "string") continue;
-          const joinedAtMs = Number(participant.joinedAtMs || participant.joinedAt * BigInt(1000));
-          connectedChurches.set(metadata.accountUid, new Date(joinedAtMs).toISOString());
-        } catch {
-          // Ignore participants that do not carry church account metadata.
+      const { LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET } = process.env;
+      if (!roomName) {
+        liveAccessStatusKnown = true;
+      } else if (/^[a-z0-9][a-z0-9-]{5,79}$/i.test(roomName) && LIVEKIT_URL && LIVEKIT_API_KEY && LIVEKIT_API_SECRET) {
+        const roomService = new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+        const [activeRoom] = await roomService.listRooms([roomName]);
+        if (activeRoom) {
+          const policy = parseStreamAccessPolicy(activeRoom.metadata);
+          allowedChurchKeys = new Set(policy.blockedChurchAccessKeys);
         }
+        const participants = await roomService.listParticipants(roomName);
+        for (const participant of participants) {
+          try {
+            const metadata = JSON.parse(participant.metadata || "{}") as { audienceType?: unknown; accountUid?: unknown };
+            if (metadata.audienceType !== "church" || typeof metadata.accountUid !== "string") continue;
+            const joinedAtMs = Number(participant.joinedAtMs || participant.joinedAt * BigInt(1000));
+            connectedChurches.set(metadata.accountUid, new Date(joinedAtMs).toISOString());
+          } catch {
+            // Ignore participants that do not carry church account metadata.
+          }
+        }
+        liveAccessStatusKnown = true;
       }
+    } catch (error) {
+      const diagnostic = error && typeof error === "object" ? error as { name?: unknown; code?: unknown } : {};
+      console.error("[zonal/churches] LiveKit status unavailable", {
+        name: typeof diagnostic.name === "string" ? diagnostic.name : "Error",
+        code: typeof diagnostic.code === "string" ? diagnostic.code : undefined,
+      });
     }
 
     const churches = snapshot.docs.map((document) => {
@@ -71,12 +83,18 @@ export async function GET(request: NextRequest) {
         status: account.status,
         connected: Boolean(connectedAt),
         connectedAt: connectedAt ?? null,
-        accessEnabled: allowedChurchKeys === null || !allowedChurchKeys.has(hashChurchAccessKey(document.id, LIVEKIT_API_SECRET ?? "")),
+        accessEnabled: allowedChurchKeys === null || !allowedChurchKeys.has(hashChurchAccessKey(document.id, process.env.LIVEKIT_API_SECRET ?? "")),
+        liveAccessStatusKnown,
         createdAt: account.createdAt ?? "",
       };
     }).sort((left, right) => left.churchName.localeCompare(right.churchName));
     return NextResponse.json({ churches });
-  } catch {
+  } catch (error) {
+    const diagnostic = error && typeof error === "object" ? error as { name?: unknown; code?: unknown } : {};
+    console.error("[zonal/churches] directory load failed", {
+      name: typeof diagnostic.name === "string" ? diagnostic.name : "Error",
+      code: typeof diagnostic.code === "string" ? diagnostic.code : undefined,
+    });
     return NextResponse.json({ error: "We could not load the registered churches." }, { status: 503 });
   }
 }
@@ -110,6 +128,19 @@ export async function POST(request: NextRequest) {
   try {
     const { auth, firestore } = getFirebaseAdmin();
     adminAuth = auth;
+
+    // Catch duplicates from accounts created before the unique-name index existed.
+    const existingChurches = await firestore.collection("accounts").where("role", "==", "church").get();
+    const duplicateChurch = existingChurches.docs.some((document) => {
+      const account = document.data();
+      const existingName = typeof account.churchName === "string" ? account.churchName : String(account.displayName ?? "");
+      const existingLocation = typeof account.churchLocation === "string" ? account.churchLocation : "";
+      return churchNameKey(existingName, existingLocation) === normalizedName;
+    });
+    if (duplicateChurch) {
+      return NextResponse.json({ error: "A church with this name and location is already registered." }, { status: 409 });
+    }
+
     await auth.createUser({ uid, displayName: churchName, disabled: false });
     createdUser = true;
 

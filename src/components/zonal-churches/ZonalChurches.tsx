@@ -18,6 +18,7 @@ type ChurchRecord = {
   createdAt: string;
   connected?: boolean;
   connectedAt?: string | null;
+  liveAccessStatusKnown?: boolean;
 };
 
 export default function ZonalChurches({ developerMode = false }: { developerMode?: boolean }) {
@@ -30,31 +31,26 @@ export default function ZonalChurches({ developerMode = false }: { developerMode
   const [busy, setBusy] = useState(false);
   const [busyChurch, setBusyChurch] = useState("");
   const [error, setError] = useState("");
+  const [directoryError, setDirectoryError] = useState("");
+  const [directoryLoading, setDirectoryLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   const loadChurches = useCallback(async () => {
+    setDirectoryLoading(true);
     try {
-      const response = await fetch("/api/zonal/churches");
+      const response = await fetch("/api/zonal/churches", { cache: "no-store" });
       const result = await response.json() as { churches?: ChurchRecord[]; error?: string };
       if (!response.ok) throw new Error(result.error ?? "Could not load church accounts.");
       setChurches(result.churches ?? []);
+      setDirectoryError("");
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Could not load church accounts.");
+      setDirectoryError(loadError instanceof Error ? loadError.message : "Could not load church accounts.");
+    } finally {
+      setDirectoryLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    fetch("/api/zonal/churches")
-      .then(async (response) => {
-        const result = await response.json() as { churches?: ChurchRecord[]; error?: string };
-        if (!response.ok) throw new Error(result.error ?? "Could not load church accounts.");
-        return result.churches ?? [];
-      })
-      .then((result) => { if (active) setChurches(result); })
-      .catch((loadError: unknown) => { if (active) setError(loadError instanceof Error ? loadError.message : "Could not load church accounts."); });
-    return () => { active = false; };
-  }, []);
+  useEffect(() => { void loadChurches(); }, [loadChurches]);
 
   async function createChurch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -174,17 +170,17 @@ export default function ZonalChurches({ developerMode = false }: { developerMode
 
           <section className="zonal-church-list-card" aria-labelledby="registered-churches-title">
             <div className="zonal-church-card-heading"><span><FiUsers aria-hidden="true" /></span><div><small>DIRECTORY</small><h2 id="registered-churches-title">Registered churches <b>{churches.length}</b></h2></div></div>
-            {error ? <p className="zonal-church-error" role="alert">{error}</p> : null}
             {message ? <p className="zonal-church-message" role="status">{message}</p> : null}
-            {churches.length ? <ul className="zonal-church-list">{churches.map((church) => <li key={church.uid} className={church.status === "suspended" ? "is-suspended" : ""}>
+            {directoryError ? <p className="zonal-church-error" role="alert">{directoryError}</p> : null}
+            {directoryLoading ? <p className="zonal-church-empty">Loading registered churches…</p> : churches.length ? <ul className="zonal-church-list">{churches.map((church) => <li key={church.uid} className={church.status === "suspended" ? "is-suspended" : ""}>
               <span className="zonal-church-list-icon"><FiHome aria-hidden="true" /></span>
-              <span className="zonal-church-list-details"><strong>{church.churchName}</strong><small>{church.churchLocation} · {church.churchType === "group" ? "Group church" : "Local church"}{church.connected ? ` · Connected since ${church.connectedAt ? new Date(church.connectedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "now"}` : ""}</small><code>{church.code ?? "Code unavailable"}</code><span className={`zonal-church-status ${church.status === "suspended" ? "is-paused" : "is-active"}`}>{church.status === "suspended" ? "Access halted" : "Access active"}</span></span>
+              <span className="zonal-church-list-details"><strong>{church.churchName}</strong><small>{church.churchLocation} · {church.churchType === "group" ? "Group church" : "Local church"}{church.connected ? ` · Connected since ${church.connectedAt ? new Date(church.connectedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "now"}` : church.liveAccessStatusKnown === false ? " · Live connection status unavailable" : ""}</small><code>{church.code ?? "Code unavailable"}</code><span className={`zonal-church-status ${church.status === "suspended" ? "is-paused" : "is-active"}`}>{church.status === "suspended" ? "Access halted" : "Access active"}</span></span>
               <div className="zonal-church-item-actions">
                 {church.code ? <button type="button" className="zonal-church-icon-action" onClick={() => void copyCode(church.code!)} aria-label={`Copy ${church.churchName} login code`}><FiCopy aria-hidden="true" /></button> : null}
                 <button type="button" className="zonal-church-state-action" onClick={() => void changeChurchAccess(church)} disabled={Boolean(busyChurch)}>{busyChurch === church.uid ? "Saving…" : church.status === "suspended" ? <><FiPlay aria-hidden="true" /> Release ID code</> : <><FiPause aria-hidden="true" /> Hold ID code</>}</button>
                 <button type="button" className="zonal-church-delete-action" onClick={() => void deleteChurch(church)} disabled={Boolean(busyChurch)} aria-label={`Delete ${church.churchName}`}><FiTrash2 aria-hidden="true" /> Delete</button>
               </div>
-            </li>)}</ul> : <p className="zonal-church-empty">No church accounts yet. Add the first church using the form.</p>}
+            </li>)}</ul> : !directoryError ? <p className="zonal-church-empty">No church accounts yet. Add the first church using the form.</p> : null}
           </section>
         </div>
       </div>
