@@ -59,6 +59,14 @@
   transition: color var(--transition-fast);
 }
 
+.stream-studio-header-actions button.stream-back-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
 .stream-back-link:hover {
   color: var(--color-coral);
 }

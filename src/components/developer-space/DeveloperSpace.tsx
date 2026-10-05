@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { FiAlertTriangle, FiArrowLeft, FiCheck, FiExternalLink, FiLock, FiLogOut, FiRadio, FiShield, FiUnlock, FiUsers, FiVideo } from "react-icons/fi";
 import Brand from "../brand/Brand";
+import HistoryBackButton from "../history-back-button/HistoryBackButton";
 import DeveloperSpecialAccess from "./DeveloperSpecialAccess";
 import "./developer-space.css";
 
@@ -168,7 +169,9 @@ export default function DeveloperSpace({ initialMode }: { initialMode: PageMode 
       <div className="developer-shell">
         <header className="developer-header">
           <Brand />
-          <Link className="developer-back-link" href="/"><FiArrowLeft aria-hidden="true" /> Back home</Link>
+          {mode === "dashboard"
+            ? <HistoryBackButton className="developer-back-link" fallbackHref="/" />
+            : <Link className="developer-back-link" href="/"><FiArrowLeft aria-hidden="true" /> Back home</Link>}
         </header>
 
         {mode === "dashboard" && dashboard ? (

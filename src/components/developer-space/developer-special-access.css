@@ -18,18 +18,11 @@
 
 .developer-special-access-create {
   display: grid;
-  grid-template-columns: auto minmax(220px, 1fr) auto;
-  align-items: center;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 19px;
 }
 
-.developer-special-access-create label {
-  color: var(--color-text-secondary);
-  font-size: 12px;
-}
-
-.developer-special-access-create select,
 .developer-special-access-create button,
 .developer-special-access-list-heading button,
 .developer-special-access-new-code button,
@@ -41,11 +34,6 @@
   background: rgba(255, 255, 255, 0.04);
   color: var(--color-text-primary);
   font: inherit;
-}
-
-.developer-special-access-create select {
-  min-width: 0;
-  padding: 0 10px;
 }
 
 .developer-special-access-create button,
@@ -60,9 +48,23 @@
 }
 
 .developer-special-access-create button {
+  display: grid;
+  align-items: start;
+  justify-content: start;
+  justify-items: start;
+  gap: 5px;
+  min-height: 60px;
+  padding: 9px 12px;
   border-color: rgba(247, 148, 104, 0.35);
   background: rgba(247, 148, 104, 0.12);
   color: var(--color-coral);
+  text-align: left;
+}
+
+.developer-special-access-create button small {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 500;
 }
 
 .developer-special-access-help {

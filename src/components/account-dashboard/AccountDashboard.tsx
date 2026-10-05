@@ -6,6 +6,7 @@ import { signOut } from "firebase/auth";
 import { FiArrowRight, FiClock, FiCloud, FiLogOut, FiRadio, FiVideo } from "react-icons/fi";
 import Brand from "../brand/Brand";
 import IndividualNotifications from "../individual-notifications/IndividualNotifications";
+import HistoryBackButton from "../history-back-button/HistoryBackButton";
 import type { PublicAccountProfile } from "../../lib/auth/types";
 import { getFirebaseClient } from "../../lib/firebase/client";
 import "./account-dashboard.css";
@@ -24,28 +25,35 @@ export default function AccountDashboard({ profile }: { profile: PublicAccountPr
   const [recordingsReload, setRecordingsReload] = useState(0);
   const isChurch = profile.role === "church";
 
+  const refreshCurrentProgram = useCallback(async () => {
+    try {
+      const response = await fetch("/api/stream/current", { cache: "no-store" });
+      const result = response.ok ? await response.json() as { program?: CurrentProgram | null } : { program: null };
+      setProgram(result.program ?? null);
+    } catch {
+      setProgram(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const handleViewerNotification = useCallback((notification: { kind: "live_started" | "recording_uploaded" }) => {
     if (notification.kind === "live_started") {
-      void fetch("/api/stream/current", { cache: "no-store" })
-        .then(async (response) => response.ok ? response.json() as Promise<{ program?: CurrentProgram | null }> : { program: null })
-        .then((result) => setProgram(result.program ?? null))
-        .catch(() => undefined);
+      void refreshCurrentProgram();
     } else {
       setRecordingsError("");
       setRecordingsLoading(true);
       setRecordingsReload((current) => current + 1);
     }
-  }, []);
+  }, [refreshCurrentProgram]);
 
   useEffect(() => {
     let active = true;
-    fetch("/api/stream/current")
-      .then(async (response) => response.ok ? response.json() as Promise<{ program?: CurrentProgram | null }> : { program: null })
-      .then((result) => { if (active) setProgram(result.program ?? null); })
-      .catch(() => { if (active) setProgram(null); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, []);
+    const refresh = () => { if (active) void refreshCurrentProgram(); };
+    refresh();
+    const interval = window.setInterval(refresh, 8000);
+    return () => { active = false; window.clearInterval(interval); };
+  }, [refreshCurrentProgram]);
 
   useEffect(() => {
     let active = true;
@@ -88,7 +96,10 @@ export default function AccountDashboard({ profile }: { profile: PublicAccountPr
       <div className="member-dashboard-shell">
         <header className="member-dashboard-header">
           <Brand />
-          <button className="member-dashboard-logout" type="button" onClick={() => void logout()}><FiLogOut aria-hidden="true" /> Sign out</button>
+          <nav className="member-dashboard-header-actions" aria-label="Account navigation">
+            <HistoryBackButton className="member-dashboard-back" fallbackHref={isChurch ? "/login-page-church" : "/login-page-individual"} />
+            <button className="member-dashboard-logout" type="button" onClick={() => void logout()}><FiLogOut aria-hidden="true" /> Sign out</button>
+          </nav>
         </header>
 
         <section className="member-dashboard-welcome">
@@ -120,6 +131,7 @@ export default function AccountDashboard({ profile }: { profile: PublicAccountPr
                         : isChurch ? "Church access is off" : "Regular individual access is off"}
                 </span>
                 <a className="member-dashboard-primary" href={program.shareUrl}>Join live service <FiArrowRight aria-hidden="true" /></a>
+                <a className="member-dashboard-special-link" href={`${program.shareUrl}${program.shareUrl.includes("?") ? "&" : "?"}specialAccess=1`}>Have a special access code? Enter it here</a>
               </div>
             ) : <p className="member-dashboard-empty">There isn’t a live service at the moment. This card will update when the Zonal Church starts one.</p>}
           </article>

@@ -24,13 +24,26 @@
   gap: 18px;
 }
 
-.zonal-churches-header nav a {
+.zonal-churches-header nav a,
+.zonal-history-back {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   color: #c7c4d5;
   font-size: 11px;
   text-decoration: none;
+}
+
+.zonal-history-back {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.zonal-history-back:hover {
+  color: var(--color-coral);
 }
 
 .zonal-churches-intro {

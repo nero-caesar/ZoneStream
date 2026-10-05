@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FiArrowLeft, FiArrowRight, FiHardDrive, FiRadio, FiShield, FiTrash2, FiUpload, FiUsers, FiVideo } from "react-icons/fi";
 import Brand from "../../brand/Brand";
 import SignOutButton from "../../sign-out-button/SignOutButton";
+import HistoryBackButton from "../../history-back-button/HistoryBackButton";
 import ZonalPasswordRecovery from "../../zonal-password-recovery/ZonalPasswordRecovery";
 import LiveRoom from "../live-room/LiveRoom";
 import type { StreamSession } from "../types";
@@ -213,7 +214,10 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
     }
   }, []);
 
-  useEffect(() => { void refreshStudioRecordings(); }, [refreshStudioRecordings]);
+  useEffect(() => {
+    const initialLoad = window.setTimeout(() => void refreshStudioRecordings(), 0);
+    return () => window.clearTimeout(initialLoad);
+  }, [refreshStudioRecordings]);
 
   useEffect(() => {
     if (!recordingToast) return;
@@ -364,12 +368,15 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
           <nav className="stream-studio-header-actions">
             <Link className="stream-back-link" href={developerMode ? "/developer/churches" : "/zonal/churches"}><FiUsers aria-hidden="true" /> Manage churches</Link>
             {developerMode ? (
-              <Link className="stream-back-link" href="/developer/developer-space"><FiArrowLeft aria-hidden="true" /> Developer Space</Link>
+              <>
+                <SignOutButton developerMode />
+                <HistoryBackButton className="stream-back-link" fallbackHref="/developer/developer-space" />
+              </>
             ) : (
               <>
                 <ZonalPasswordRecovery context="studio" />
                 <SignOutButton />
-                <Link className="stream-back-link" href="/"><FiArrowLeft aria-hidden="true" /> Back to ZoneStream</Link>
+                <HistoryBackButton className="stream-back-link" fallbackHref="/" />
               </>
             )}
           </nav>

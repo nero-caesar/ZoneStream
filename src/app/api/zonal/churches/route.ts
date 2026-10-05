@@ -52,8 +52,8 @@ export async function GET(request: NextRequest) {
         const participants = await roomService.listParticipants(roomName);
         for (const participant of participants) {
           try {
-            const metadata = JSON.parse(participant.metadata || "{}") as { audienceType?: unknown; accountUid?: unknown };
-            if (metadata.audienceType !== "church" || typeof metadata.accountUid !== "string") continue;
+            const metadata = JSON.parse(participant.metadata || "{}") as { audienceType?: unknown; accountUid?: unknown; developerSpecialAccessCodeId?: unknown };
+            if (metadata.audienceType !== "church" || typeof metadata.accountUid !== "string" || typeof metadata.developerSpecialAccessCodeId === "string") continue;
             const joinedAtMs = Number(participant.joinedAtMs || participant.joinedAt * BigInt(1000));
             connectedChurches.set(metadata.accountUid, new Date(joinedAtMs).toISOString());
           } catch {
@@ -260,8 +260,8 @@ export async function PATCH(request: NextRequest) {
           const disconnected = await disconnectRoomParticipants(roomService, program.roomName, (participant) => {
             if (!participant.identity.startsWith("viewer-")) return false;
             try {
-              const metadata = JSON.parse(participant.metadata ?? "{}") as { accountUid?: unknown; audienceType?: unknown };
-              return metadata.accountUid === uid && metadata.audienceType === "church";
+              const metadata = JSON.parse(participant.metadata ?? "{}") as { accountUid?: unknown; audienceType?: unknown; developerSpecialAccessCodeId?: unknown };
+              return metadata.accountUid === uid && metadata.audienceType === "church" && typeof metadata.developerSpecialAccessCodeId !== "string";
             } catch {
               return false;
             }
@@ -310,8 +310,8 @@ export async function DELETE(request: NextRequest) {
         const roomService = new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
         const disconnected = await disconnectRoomParticipants(roomService, program.roomName, (participant) => {
           try {
-            const metadata = JSON.parse(participant.metadata ?? "{}") as { accountUid?: unknown; audienceType?: unknown };
-            return participant.identity.startsWith("viewer-") && metadata.accountUid === uid && metadata.audienceType === "church";
+            const metadata = JSON.parse(participant.metadata ?? "{}") as { accountUid?: unknown; audienceType?: unknown; developerSpecialAccessCodeId?: unknown };
+            return participant.identity.startsWith("viewer-") && metadata.accountUid === uid && metadata.audienceType === "church" && typeof metadata.developerSpecialAccessCodeId !== "string";
           } catch {
             return false;
           }

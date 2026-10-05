@@ -87,7 +87,8 @@ type AccessAction =
 function getStreamAttendees(room: Room): StreamAttendee[] {
   return Array.from(room.remoteParticipants.values()).flatMap((participant) => {
     try {
-      const metadata = JSON.parse(participant.metadata ?? "{}") as { audienceType?: unknown };
+      const metadata = JSON.parse(participant.metadata ?? "{}") as { audienceType?: unknown; developerSpecialAccessCodeId?: unknown };
+      if (typeof metadata.developerSpecialAccessCodeId === "string") return [];
       if (metadata.audienceType !== "individual" && metadata.audienceType !== "church") return [];
       return [{
         identity: participant.identity,
@@ -786,8 +787,8 @@ export default function LiveRoom({
             reportParticipantActivity("disconnected", participant);
             syncAudience(nextRoom);
             try {
-              const metadata = JSON.parse(participant.metadata ?? "{}") as { audienceType?: unknown; role?: unknown; remotePresenterInviteId?: unknown };
-              if (metadata.audienceType === "church") {
+              const metadata = JSON.parse(participant.metadata ?? "{}") as { audienceType?: unknown; developerSpecialAccessCodeId?: unknown; role?: unknown; remotePresenterInviteId?: unknown };
+              if (metadata.audienceType === "church" && typeof metadata.developerSpecialAccessCodeId !== "string") {
                 addStudioActivity(`${participant.name || "A church"} disconnected`);
               }
               if (metadata.role === "remote-presenter") {

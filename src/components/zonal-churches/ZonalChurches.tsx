@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import Link from "next/link";
-import { FiArrowLeft, FiCopy, FiHome, FiPause, FiPlay, FiPlus, FiRadio, FiTrash2, FiUsers } from "react-icons/fi";
+import { FiCopy, FiHome, FiPause, FiPlay, FiPlus, FiTrash2, FiUsers } from "react-icons/fi";
 import Brand from "../brand/Brand";
 import SignOutButton from "../sign-out-button/SignOutButton";
+import HistoryBackButton from "../history-back-button/HistoryBackButton";
 import "./zonal-churches.css";
 
 type ChurchRecord = {
@@ -50,7 +50,10 @@ export default function ZonalChurches({ developerMode = false }: { developerMode
     }
   }, []);
 
-  useEffect(() => { void loadChurches(); }, [loadChurches]);
+  useEffect(() => {
+    const initialLoad = window.setTimeout(() => void loadChurches(), 0);
+    return () => window.clearTimeout(initialLoad);
+  }, [loadChurches]);
 
   async function createChurch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -134,9 +137,8 @@ export default function ZonalChurches({ developerMode = false }: { developerMode
         <header className="zonal-churches-header">
           <Brand />
           <nav>
-            <Link href={developerMode ? "/developer/studio" : "/stream/studio"}><FiRadio aria-hidden="true" /> Studio</Link>
-            <Link href={developerMode ? "/developer/developer-space" : "/"}><FiArrowLeft aria-hidden="true" /> {developerMode ? "Developer Space" : "Home"}</Link>
-            {!developerMode ? <SignOutButton /> : null}
+            <HistoryBackButton className="zonal-history-back" fallbackHref={developerMode ? "/developer/developer-space" : "/stream/studio"} />
+            <SignOutButton developerMode={developerMode} />
           </nav>
         </header>
         <section className="zonal-churches-intro">

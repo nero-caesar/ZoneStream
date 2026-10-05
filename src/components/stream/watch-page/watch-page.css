@@ -41,6 +41,32 @@
   gap: 18px;
 }
 
+.stream-watch-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 17px;
+}
+
+.stream-watch-header-actions .stream-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #c3c4d4;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.stream-watch-header-actions .stream-back-link:hover {
+  color: var(--color-coral);
+}
+
 .stream-watch-content {
   width: 100%;
   margin-block: auto;
@@ -166,16 +192,16 @@
 
 .stream-watch-special-link {
   justify-self: start;
-  margin-top: 3px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #d3b4f1;
+  margin-top: 5px;
+  padding: 9px 11px;
+  border: 1px solid rgba(211, 180, 241, 0.3);
+  border-radius: 9px;
+  background: rgba(178, 125, 228, 0.08);
+  color: #e4cff7;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-align: left;
 }
 
 .stream-watch-access-paused {
@@ -190,7 +216,9 @@
 }
 
 .stream-watch-special-link:hover {
-  color: #efdfff;
+  border-color: rgba(211, 180, 241, 0.55);
+  background: rgba(178, 125, 228, 0.14);
+  color: #fff;
 }
 
 .stream-watch-special-note {
@@ -274,5 +302,9 @@
 
   .stream-watch-footer {
     font-size: 9px;
+  }
+
+  .stream-watch-header-actions {
+    gap: 10px;
   }
 }

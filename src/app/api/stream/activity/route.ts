@@ -45,29 +45,32 @@ export async function POST(request: NextRequest) {
     const program = await firestore.collection("programs").doc("current").get();
     if (!program.exists || program.get("roomName") !== body.roomName) return NextResponse.json({ recorded: false }, { status: 409 });
 
-    if (participantIdentity && (specialAccessCodeId || developerSpecialAccessCodeId) && LIVEKIT_URL && LIVEKIT_API_KEY && LIVEKIT_API_SECRET) {
-      if (developerSpecialAccessCodeId) {
+    if (developerSpecialAccessCodeId) {
+      if (participantIdentity && LIVEKIT_URL && LIVEKIT_API_KEY && LIVEKIT_API_SECRET) {
         await recordDeveloperSpecialAccessConnection({ codeId: developerSpecialAccessCodeId, identity: participantIdentity, roomName: body.roomName, event: body.event });
-      } else {
-        const roomService = new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
-        const [activeRoom] = await roomService.listRooms([body.roomName]);
-        if (activeRoom) {
-          const decryptCodes = (encrypted: string) => decryptPrivateSpecialAccessState(encrypted, LIVEKIT_API_SECRET);
-          const policy = parseStreamAccessPolicy(activeRoom.metadata, decryptCodes);
-          const code = policy.specialAccessCodes.find((entry) => entry.id === specialAccessCodeId);
-          if (code?.redeemedBy?.identity === participantIdentity) {
-            const now = new Date().toISOString();
-            if (body.event === "connected") {
-              code.redeemedBy.connectedAt = now;
-              delete code.redeemedBy.disconnectedAt;
-            } else {
-              code.redeemedBy.disconnectedAt = now;
-            }
-            await roomService.updateRoomMetadata(
-              body.roomName,
-              serializeStreamAccessPolicy(policy, encryptPrivateSpecialAccessState(policy.specialAccessCodes, LIVEKIT_API_SECRET), isPlatformViewerPaused(activeRoom.metadata)),
-            );
+      }
+      return NextResponse.json({ recorded: true, privateDeveloperAccess: true });
+    }
+
+    if (participantIdentity && specialAccessCodeId && LIVEKIT_URL && LIVEKIT_API_KEY && LIVEKIT_API_SECRET) {
+      const roomService = new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+      const [activeRoom] = await roomService.listRooms([body.roomName]);
+      if (activeRoom) {
+        const decryptCodes = (encrypted: string) => decryptPrivateSpecialAccessState(encrypted, LIVEKIT_API_SECRET);
+        const policy = parseStreamAccessPolicy(activeRoom.metadata, decryptCodes);
+        const code = policy.specialAccessCodes.find((entry) => entry.id === specialAccessCodeId);
+        if (code?.redeemedBy?.identity === participantIdentity) {
+          const now = new Date().toISOString();
+          if (body.event === "connected") {
+            code.redeemedBy.connectedAt = now;
+            delete code.redeemedBy.disconnectedAt;
+          } else {
+            code.redeemedBy.disconnectedAt = now;
           }
+          await roomService.updateRoomMetadata(
+            body.roomName,
+            serializeStreamAccessPolicy(policy, encryptPrivateSpecialAccessState(policy.specialAccessCodes, LIVEKIT_API_SECRET), isPlatformViewerPaused(activeRoom.metadata)),
+          );
         }
       }
     }

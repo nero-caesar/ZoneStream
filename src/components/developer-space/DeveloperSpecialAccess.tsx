@@ -29,7 +29,6 @@ function formatTime(value?: string): string {
 }
 
 export default function DeveloperSpecialAccess() {
-  const [mode, setMode] = useState<"temporal" | "permanent">("temporal");
   const [codes, setCodes] = useState<SpecialAccessCode[]>([]);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -60,7 +59,7 @@ export default function DeveloperSpecialAccess() {
     };
   }, [loadCodes]);
 
-  async function createCode() {
+  async function createCode(mode: "temporal" | "permanent") {
     setBusy(true);
     setError("");
     setNotice("");
@@ -128,13 +127,13 @@ export default function DeveloperSpecialAccess() {
       <p className="developer-requests-description">These codes work after the recipient signs in. They are managed only here and do not appear in the Zonal Studio’s special-code list.</p>
 
       <div className="developer-special-access-create">
-        <label htmlFor="developer-code-duration">Code duration</label>
-        <select id="developer-code-duration" value={mode} onChange={(event) => setMode(event.target.value as "temporal" | "permanent")} disabled={busy}>
-          <option value="temporal">Temporal · one account, one live service</option>
-          <option value="permanent">Permanent · one account, future services</option>
-        </select>
-        <button type="button" onClick={() => void createCode()} disabled={busy || codes.length >= 100}>
-          <FiKey aria-hidden="true" /> {busy ? "Saving…" : "Generate code"}
+        <button type="button" onClick={() => void createCode("temporal")} disabled={busy || codes.length >= 100}>
+          <FiKey aria-hidden="true" /> {busy ? "Working…" : "Create temporary code"}
+          <small>For one live service</small>
+        </button>
+        <button type="button" onClick={() => void createCode("permanent")} disabled={busy || codes.length >= 100}>
+          <FiKey aria-hidden="true" /> {busy ? "Working…" : "Create permanent code"}
+          <small>Reusable until turned off</small>
         </button>
       </div>
       <p className="developer-special-access-help">

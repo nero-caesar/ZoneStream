@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import Link from "next/link";
-import { FiArrowLeft, FiRadio, FiShield } from "react-icons/fi";
+import { FiRadio, FiShield } from "react-icons/fi";
 import Brand from "../../brand/Brand";
+import HistoryBackButton from "../../history-back-button/HistoryBackButton";
+import SignOutButton from "../../sign-out-button/SignOutButton";
 import LiveRoom from "../live-room/LiveRoom";
 import type { StreamAudienceType } from "../types";
 import type { PublicAccountProfile } from "../../../lib/auth/types";
@@ -16,6 +17,13 @@ export default function WatchPage({ roomName, title, profile, developerPreview =
   const [hasJoined, setHasJoined] = useState(false);
   const [error, setError] = useState("");
   const [accessNotice, setAccessNotice] = useState<"regular-off" | "viewer-paused" | "developer-special" | null>(null);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("specialAccess") === "1") {
+      const timeout = window.setTimeout(() => setShowSpecialAccess(true), 0);
+      return () => window.clearTimeout(timeout);
+    }
+  }, []);
 
   useEffect(() => {
     if (developerPreview) return;
@@ -53,9 +61,10 @@ export default function WatchPage({ roomName, title, profile, developerPreview =
       <div className="stream-watch-shell">
         <header className="stream-watch-header">
           <Brand />
-          <Link className="stream-back-link" href="/">
-            <FiArrowLeft aria-hidden="true" /> Back to ZoneStream
-          </Link>
+          <nav className="stream-watch-header-actions" aria-label="Account navigation">
+            <HistoryBackButton className="stream-back-link" fallbackHref="/dashboard" />
+            <SignOutButton developerMode={developerPreview} />
+          </nav>
         </header>
 
         <section className="stream-watch-content">
@@ -110,7 +119,7 @@ export default function WatchPage({ roomName, title, profile, developerPreview =
                     setError("");
                   }}
                 >
-                  {showSpecialAccess ? "Hide special access" : "Have a special access code?"}
+                  {showSpecialAccess ? "Hide special-access code entry" : "Enter a special-access code"}
                 </button> : null}
 
                 {!developerPreview && showSpecialAccess ? (
