@@ -1008,7 +1008,7 @@ export default function LiveRoom({
   }, [accessCode, addStudioActivity, audienceType, connectProgramMonitor, developerPreview, onStreamStarted, participantName, recordingAudioContext, refreshAccessState, refreshRecordingSources, reportParticipantActivity, role, roomName, showRecordingMessage, startRecording, syncAudience, syncProgramMonitor]);
 
   useEffect(() => {
-    if (role !== "host") return;
+    if (role !== "host" && role !== "viewer") return;
     const dispatchStreamState = (active: boolean) => {
       window.dispatchEvent(new CustomEvent("zonestream:stream-state", { detail: { active } }));
     };
