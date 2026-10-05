@@ -7,6 +7,7 @@ import "./marketing-panel.css";
 
 export default function MarketingPanel({ portal }: { portal: Portal }) {
   const isChurch = portal === "church";
+  const isZonal = portal === "zonal";
 
   return (
     <section className="auth-story" aria-label="About ZoneStream">
@@ -20,24 +21,28 @@ export default function MarketingPanel({ portal }: { portal: Portal }) {
       </div>
 
       <div className="story-message">
-        <Eyebrow>{isChurch ? "CHURCH PORTAL" : "INDIVIDUAL PORTAL"}</Eyebrow>
+        <Eyebrow>{isChurch ? "CHURCH PORTAL" : isZonal ? "ZONAL CHURCH PORTAL" : "INDIVIDUAL PORTAL"}</Eyebrow>
         <h1>
           {isChurch ? (
-            <>One church.<br /><span>One connection.</span></>
+            <>Your church.<br /><span>Your connection.</span></>
+          ) : isZonal ? (
+            <>One zone.<br /><span>Connected.</span></>
           ) : (
             <>Every service.<br /><span>Closer to you.</span></>
           )}
         </h1>
         <p>
           {isChurch
-            ? "Keep your church connected to the heartbeat of Zonal Headquarters, wherever you serve."
-            : "Experience the presence, teaching, and connection of your zone from wherever you are."}
+            ? "Use the unique 10-digit access code issued to your church by the Zonal Church."
+            : isZonal
+              ? "Manage church access and bring the services of Nigeria South South Zone 1 online."
+              : "Experience the presence, teaching, and connection of your zone from wherever you are."}
         </p>
       </div>
 
       <footer className="story-footer">
         <span className="eyebrow-rule" aria-hidden="true" />
-        <span>CE Bayelsa · South South Zone 1</span>
+        <span>Nigeria South South Zone 1</span>
       </footer>
     </section>
   );

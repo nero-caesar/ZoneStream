@@ -10,7 +10,7 @@
 }
 
 .stream-studio-glow {
-  position: absolute;
+  position: fixed;
   z-index: -1;
   top: 10%;
   right: 12%;
@@ -39,6 +39,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+}
+
+.stream-studio-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .stream-back-link {
@@ -254,6 +262,243 @@
   line-height: 1.5;
 }
 
+.stream-studio-recording-note {
+  margin: 15px 0 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(247, 148, 104, 0.16);
+  border-radius: 9px;
+  background: rgba(247, 148, 104, 0.045);
+  color: #aaa7b6;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.stream-studio-choices {
+  width: min(100%, 1080px);
+  margin: auto;
+  padding-block: clamp(72px, 13vh, 130px);
+}
+
+.stream-studio-choices-intro {
+  max-width: 760px;
+  margin-bottom: 40px;
+}
+
+.stream-studio-choices-intro h1 {
+  max-width: 730px;
+  font-size: clamp(43px, 6vw, 72px);
+}
+
+.stream-studio-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stream-studio-mode-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 18px;
+  min-height: 190px;
+  padding: 27px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #f4f2fa;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+
+.stream-studio-mode-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(247, 148, 104, 0.48);
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.stream-studio-mode-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border: 1px solid rgba(247, 148, 104, 0.3);
+  border-radius: 15px;
+  background: rgba(247, 148, 104, 0.1);
+  color: var(--color-coral);
+  font-size: 19px;
+  place-items: center;
+}
+
+.stream-studio-mode-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.stream-studio-mode-copy small {
+  color: #b19acb;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+}
+
+.stream-studio-mode-copy strong {
+  font-size: 18px;
+  letter-spacing: -0.035em;
+}
+
+.stream-studio-mode-copy > span {
+  max-width: 370px;
+  color: #a6a5b5;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.stream-studio-mode-arrow {
+  margin-top: 4px;
+  color: #b6a2d1;
+}
+
+.stream-studio-upload-pending,
+.stream-studio-upload-page {
+  display: grid;
+  justify-items: start;
+  width: min(100%, 720px);
+  margin: auto;
+  padding-block: clamp(58px, 11vh, 108px);
+}
+
+.stream-studio-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 60px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #c3c4d4;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.stream-studio-upload-pending h1,
+.stream-studio-upload-page h1 {
+  margin: 18px 0 16px;
+  font-size: clamp(44px, 7vw, 68px);
+  letter-spacing: -0.075em;
+}
+
+.stream-studio-upload-pending h1 span,
+.stream-studio-upload-page h1 span {
+  color: var(--color-coral);
+}
+
+.stream-studio-upload-pending > p,
+.stream-studio-upload-page > p {
+  max-width: 650px;
+  margin: 0;
+  color: #b5b8ce;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.stream-studio-upload-pending-note {
+  margin-top: 25px;
+  padding: 15px 17px;
+  border: 1px solid rgba(247, 148, 104, 0.2);
+  border-radius: 12px;
+  background: rgba(247, 148, 104, 0.055);
+  color: #d5cad8;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.stream-studio-upload-form {
+  display: grid;
+  gap: 9px;
+  width: 100%;
+  margin-top: 24px;
+  padding: 21px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.stream-studio-upload-form label {
+  margin-top: 5px;
+  color: #d8d7e4;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.stream-studio-upload-form input:not([type="file"]) {
+  min-height: 45px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #fff;
+  font-size: 12px;
+}
+
+.stream-studio-upload-form input[type="file"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: #c6c3d1;
+  font-size: 11px;
+}
+
+.stream-studio-upload-form input:focus {
+  border-color: rgba(247, 148, 104, 0.68);
+  outline: none;
+}
+
+.stream-studio-upload-success {
+  margin: 9px 0 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(74, 205, 138, 0.3);
+  border-radius: 10px;
+  background: rgba(74, 205, 138, 0.08);
+  color: #a7e9c6;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.stream-studio-upload-progress {
+  position: relative;
+  overflow: hidden;
+  min-height: 27px;
+  margin-top: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.stream-studio-upload-progress > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f79468, #d58be2);
+  transition: width 180ms ease;
+}
+
+.stream-studio-upload-progress small {
+  position: relative;
+  z-index: 1;
+  display: block;
+  padding: 6px 11px;
+  color: #18131f;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.stream-studio-upload-form .stream-studio-start-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .stream-studio-security-note {
   display: flex;
   align-items: flex-start;
@@ -288,15 +533,18 @@
 }
 
 .stream-studio-intro-compact h1 {
+  min-width: 0;
   flex: none;
   margin: 13px 0 0;
   font-size: clamp(33px, 4vw, 50px);
 }
 
 .stream-studio-intro-compact > p {
+  min-width: 0;
   max-width: 355px;
   margin-bottom: 4px;
   font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .stream-studio-footer {
@@ -307,12 +555,35 @@
 }
 
 @media (max-width: 900px) {
+  .stream-studio-choices,
+  .stream-studio-upload-page {
+    width: min(100%, 650px);
+  }
+
+  .stream-studio-mode-grid {
+    grid-template-columns: 1fr;
+  }
+
   .stream-studio-layout {
     grid-template-columns: 1fr;
     gap: 39px;
     width: min(100%, 650px);
     margin-inline: auto;
     padding-block: 68px;
+  }
+
+  .stream-studio-intro-compact {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .stream-studio-intro-compact h1 {
+    flex: 1 1 100%;
+  }
+
+  .stream-studio-intro-compact > p {
+    max-width: 100%;
   }
 
   .stream-studio-intro h1 {
@@ -341,9 +612,51 @@
     padding: 24px 18px 20px;
   }
 
+  .stream-studio-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .stream-studio-header-actions {
+    justify-content: flex-start;
+    width: 100%;
+    gap: 12px;
+  }
+
   .stream-studio-layout {
     gap: 32px;
     padding-block: 58px 40px;
+  }
+
+  .stream-studio-session {
+    margin-block: 0;
+    padding-block: 34px 20px;
+  }
+
+  .stream-studio-choices {
+    padding-block: 56px 40px;
+  }
+
+  .stream-studio-mode-card {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    min-height: 0;
+    padding: 20px 16px;
+  }
+
+  .stream-studio-mode-icon {
+    width: 41px;
+    height: 41px;
+    border-radius: 13px;
+    font-size: 16px;
+  }
+
+  .stream-studio-mode-copy strong {
+    font-size: 15px;
+  }
+
+  .stream-studio-back-button {
+    margin-bottom: 42px;
   }
 
   .stream-studio-intro h1 {

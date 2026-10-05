@@ -13,14 +13,14 @@ export default function HomePage() {
       <div className="selection-content">
         <header className="selection-header">
           <Brand />
-          <div className="secure-label">
+          <div className="secure-label" aria-label="Secure access">
             <FiShield size={16} aria-hidden="true" />
             <span>Secure access</span>
           </div>
         </header>
 
         <section className="selection-hero" aria-labelledby="home-title">
-          <Eyebrow>CE BAYELSA · NIGERIA SOUTH SOUTH ZONE 1</Eyebrow>
+          <Eyebrow>NIGERIA SOUTH SOUTH ZONE 1</Eyebrow>
           <h1 id="home-title">
             Stay connected to
             <br />
@@ -52,14 +52,14 @@ export default function HomePage() {
             <span className="status-indicator" aria-hidden="true" />
             <span>Zonal Headquarters is online</span>
             <span className="status-divider" aria-hidden="true" />
-            <span>Serving churches across Bayelsa</span>
+            <span>Connecting churches across Nigeria South South Zone 1</span>
           </div>
         </section>
 
         <footer className="selection-footer">
-          <span>© 2025 ZoneStream</span>
+          <span>© {new Date().getFullYear()} ZoneStream</span>
           <div className="selection-footer-links">
-            <Link href="/stream/studio" className="selection-studio-link">
+            <Link href="/login-page-zonal" className="selection-studio-link">
               <FiRadio aria-hidden="true" /> Zonal Church studio
             </Link>
             <span>Built for the zone, by the zone.</span>

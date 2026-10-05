@@ -134,6 +134,622 @@
   aspect-ratio: 16 / 9;
 }
 
+.live-room-audience {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 14px;
+  padding: 18px 22px 22px;
+  border-top: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.live-room-attendance,
+.live-room-access {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.live-room-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.live-room-section-eyebrow {
+  color: #999bb1;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.15em;
+}
+
+.live-room-section-heading h3 {
+  margin: 6px 0 0;
+  color: #f2f1fa;
+  font-size: 16px;
+  letter-spacing: -0.035em;
+}
+
+.live-room-count-badge {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1px solid rgba(247, 148, 104, 0.28);
+  border-radius: 11px;
+  background: rgba(247, 148, 104, 0.09);
+  color: #ffb596;
+  font-size: 12px;
+  font-weight: 750;
+  place-items: center;
+}
+
+.live-room-church-list,
+.live-room-special-code-list {
+  display: grid;
+  gap: 8px;
+  margin: 17px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.live-room-church-list {
+  max-height: min(34vh, 300px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.live-room-special-code-list {
+  max-height: min(32vh, 280px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 3px;
+}
+
+.live-room-church-list li,
+.live-room-special-code-list li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.live-room-church-list li.is-disconnected {
+  opacity: 0.48;
+  filter: saturate(0.55);
+}
+
+.live-room-church-icon {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  flex: none;
+  border-radius: 9px;
+  background: rgba(118, 80, 184, 0.14);
+  color: #c8b2ec;
+  place-items: center;
+}
+
+.live-room-church-icon svg {
+  font-size: 14px;
+}
+
+.live-room-church-name {
+  overflow: hidden;
+  color: #efedf7;
+  font-size: 12px;
+  font-weight: 620;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-room-church-details {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.live-room-church-details small {
+  color: #9698aa;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.live-room-church-details code {
+  width: fit-content;
+  color: #d4c5f0;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.live-room-church-list .live-room-code-toggle {
+  flex: none;
+  min-width: 42px;
+  padding-inline: 8px;
+  font-size: 10px;
+}
+
+.live-room-church-status {
+  flex: none;
+  margin-left: auto;
+  color: #71d8a5;
+  font-size: 10px;
+}
+
+.live-room-church-status.is-offline {
+  color: #9698aa;
+}
+
+.live-room-church-activity {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: min(24vh, 180px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.live-room-church-activity li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(247, 148, 104, 0.08);
+  color: #ffc6a9;
+  font-size: 10px;
+}
+
+.live-room-church-activity time {
+  flex: none;
+  color: #c4a999;
+  font-size: 9px;
+}
+
+.live-room-studio-toast {
+  position: fixed;
+  z-index: 21;
+  right: 24px;
+  bottom: 92px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(360px, calc(100vw - 36px));
+  padding: 13px 15px;
+  border: 1px solid rgba(114, 216, 165, 0.3);
+  border-radius: 12px;
+  background: #171922;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.38);
+  color: #edf7f1;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.live-room-studio-toast svg {
+  flex: none;
+  margin-top: 1px;
+  color: #71d8a5;
+}
+
+.live-room-empty-audience {
+  margin: 17px 0 0;
+  color: #9294a7;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.live-room-access-description {
+  margin: 12px 0 15px;
+  color: #a6a6b0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.live-room-access-divider {
+  height: 1px;
+  margin: 18px 0;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.live-room-access-status {
+  flex: none;
+  padding: 6px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.live-room-access-status.is-open {
+  border-color: rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.08);
+  color: #7bd9a1;
+}
+
+.live-room-access-status.is-restricted {
+  border-color: rgba(247, 148, 104, 0.28);
+  background: rgba(247, 148, 104, 0.08);
+  color: #ffbd9c;
+}
+
+.live-room-access-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #e9e7f2;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 620;
+}
+
+.live-room-access-toggle:disabled,
+.live-room-generate-code:disabled,
+.live-room-code-toggle:disabled,
+.live-room-copy-code:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.live-room-toggle-indicator {
+  display: flex;
+  width: 27px;
+  height: 16px;
+  align-items: center;
+  padding: 2px;
+  border-radius: 999px;
+  background: #555564;
+  transition: background var(--transition-fast);
+}
+
+.live-room-toggle-indicator span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--transition-fast);
+}
+
+.live-room-access-toggle.is-open .live-room-toggle-indicator {
+  background: #3caa6a;
+}
+
+.live-room-access-toggle.is-open .live-room-toggle-indicator span {
+  transform: translateX(11px);
+}
+
+.live-room-access-toggle.is-restricted .live-room-toggle-indicator {
+  background: #a64e59;
+}
+
+.live-room-code-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.live-room-code-heading h4 {
+  margin: 0;
+  color: #e9e7f2;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.live-room-code-heading p {
+  margin: 5px 0 0;
+  color: #858697;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.live-room-generate-code {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid rgba(247, 148, 104, 0.25);
+  border-radius: 9px;
+  background: rgba(247, 148, 104, 0.1);
+  color: #ffd1bd;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.live-room-generated-code {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 11px;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 11px;
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.live-room-generated-code > div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: #bfead0;
+  font-size: 9px;
+}
+
+.live-room-generated-code > div > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-room-generated-code > div svg {
+  color: #66d28e;
+}
+
+.live-room-generated-code code {
+  overflow-wrap: anywhere;
+  color: #f0fff4;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.live-room-generated-code button {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #bfead0;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.live-room-generated-code .live-room-dismiss-code {
+  color: #9294a7;
+}
+
+.live-room-special-code-list {
+  display: grid;
+  gap: 8px;
+  margin: 13px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.live-room-special-code-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.live-room-special-code-list li.is-disabled {
+  border-color: rgba(239, 68, 68, 0.18);
+  background: rgba(239, 68, 68, 0.035);
+}
+
+.live-room-special-code-details {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+}
+
+.live-room-special-code-details > code {
+  flex: none;
+  color: #ffd2c0;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+}
+
+.live-room-special-code-name {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  overflow: hidden;
+  color: #efedf7;
+  font-size: 10px;
+  font-weight: 620;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-room-special-code-name small {
+  color: #858697;
+  font-size: 8px;
+  font-weight: 500;
+}
+
+.live-room-special-code-presence {
+  color: #9b9cac;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.live-room-special-code-presence.is-connected {
+  color: #71d8a5;
+}
+
+.live-room-special-code-times {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 3px;
+  color: #9698aa;
+  font-size: 9px;
+}
+
+.live-room-code-toggle {
+  min-width: 42px;
+  min-height: 27px;
+  padding: 0 7px;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #8be0b8;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.live-room-code-toggle.is-restricted {
+  border-color: rgba(239, 68, 68, 0.27);
+  background: rgba(239, 68, 68, 0.1);
+  color: #ffaaa4;
+}
+
+.live-room-copy-code {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #bbb8c9;
+  cursor: pointer;
+  place-items: center;
+}
+
+.live-room-copy-code svg {
+  font-size: 12px;
+}
+
+.live-room-empty-codes {
+  margin: 13px 0 0;
+  color: #858697;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.live-room-special-code-list button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.live-room-special-code-list .live-room-code-toggle {
+  display: grid;
+  place-items: center;
+}
+
+.live-room-special-code-list button {
+  flex: none;
+}
+
+/* Keep each code row readable at phone widths. */
+@media (max-width: 520px) {
+  .live-room-special-code-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .live-room-special-code-presence {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .live-room-code-toggle {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .live-room-copy-code {
+    display: none;
+  }
+}
+
+.live-room-special-code-list li .live-room-copy-code {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #bbb8c9;
+  cursor: pointer;
+  place-items: center;
+}
+
+.live-room-access-error {
+  margin: 11px 0 0;
+  color: #ffaaa4;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.live-room-access-message {
+  margin: 11px 0 0;
+  color: #8be0b8;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.live-room-retry-disconnect {
+  margin-top: 9px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #ffbd9c;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.live-room-retry-disconnect:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.live-room-access-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: #858697;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.live-room-access-footnote svg {
+  flex: none;
+  margin-top: 1px;
+  color: #b99be6;
+}
+
 .stream-video {
   display: block;
   width: 100%;
@@ -215,6 +831,568 @@
   line-height: 1.6;
 }
 
+.live-room-record-source {
+  position: fixed;
+  top: -2px;
+  left: -2px;
+  width: 2px;
+  height: 2px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.live-room-presenter-panel {
+  display: grid;
+  gap: 12px;
+  margin: 0 28px 20px;
+  padding: 18px;
+  border: 1px solid rgba(164, 117, 217,  0.34);
+  border-radius: var(--radius-md);
+  background: linear-gradient(125deg, rgba(118, 80, 184, 0.13), rgba(255, 255, 255, 0.025));
+}
+
+.live-room-presenter-heading,
+.live-room-presenter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.live-room-presenter-heading h3 {
+  margin: 5px 0 0;
+  font-size: 16px;
+}
+
+.live-room-presenter-panel > p,
+.live-room-presenter-link-note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.live-room-presenter-state {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+.live-room-presenter-state > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8d8797;
+}
+
+.live-room-presenter-state.is-connected {
+  color: #79e4b2;
+}
+
+.live-room-presenter-state.is-connected > span {
+  background: #54daa1;
+  box-shadow: 0 0 0 4px rgba(84, 218, 161, 0.13);
+}
+
+.live-room-presenter-person {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px 14px;
+  padding: 11px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+}
+
+.live-room-presenter-person span,
+.live-room-presenter-person time {
+  color: var(--color-text-secondary);
+}
+
+.live-room-presenter-link {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.live-room-presenter-link code {
+  min-width: 0;
+  overflow: hidden;
+  color: #eadbff;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-room-presenter-link button,
+.live-room-presenter-revoke {
+  display: inline-flex;
+  min-height: 36px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f6efff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.live-room-presenter-revoke {
+  border-color: rgba(255, 111, 111, 0.3);
+  color: #ffb0a5;
+}
+
+.live-room-presenter-message {
+  margin: 0;
+  color: #ffd3c0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.live-room-presenter-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.live-room-source-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  gap: 11px;
+}
+
+.live-room-source-card {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.17);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+
+.live-room-source-card:hover {
+  border-color: rgba(190, 153, 230, 0.58);
+}
+
+.live-room-source-card.is-on-air {
+  border: 2px solid var(--color-coral, #f79468);
+  padding: 6px;
+  background: rgba(247, 148, 104, 0.09);
+  box-shadow: 0 0 0 3px rgba(247, 148, 104, 0.13);
+}
+
+.live-room-source-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.live-room-source-preview {
+  display: grid;
+  min-height: 88px;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 7px;
+  background: #07070b;
+  aspect-ratio: 16 / 9;
+}
+
+.live-room-source-preview .stream-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.live-room-source-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.live-room-program-flier {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #08080c;
+  object-fit: contain;
+}
+
+.live-room-monitor-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.16);
+  color: #b8b2c6;
+  font-size: 10px;
+}
+
+.live-room-monitor-status > span {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: #9d8da9;
+}
+
+.live-room-monitor-status.is-connected > span {
+  background: #43d390;
+  box-shadow: 0 0 0 4px rgba(67, 211, 144, 0.13);
+}
+
+.live-room-monitor-status.is-unavailable {
+  border-color: rgba(255, 176, 112, 0.25);
+  color: #ffd0ac;
+}
+
+.live-room-monitor-status.is-unavailable > span {
+  background: #ffb270;
+}
+
+.live-room-flier-controls {
+  display: grid;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.13);
+}
+
+.live-room-flier-heading,
+.live-room-flier-on-air-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.live-room-flier-heading > div {
+  display: grid;
+  flex: 1 1 240px;
+  gap: 4px;
+}
+
+.live-room-flier-heading strong {
+  color: #f4edff;
+  font-size: 12px;
+}
+
+.live-room-flier-heading span,
+.live-room-flier-on-air-controls label {
+  color: #aaa2b9;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.live-room-flier-input {
+  display: none;
+}
+
+.live-room-flier-heading button,
+.live-room-flier-on-air-controls button,
+.live-room-flier-on-air-controls select {
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f6efff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.live-room-flier-heading button:disabled,
+.live-room-flier-on-air-controls button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.live-room-flier-heading .live-room-flier-remove {
+  border-color: rgba(255, 112, 112, 0.28);
+  color: #ffb1a5;
+}
+
+.live-room-flier-on-air-controls label {
+  display: grid;
+  min-width: 180px;
+  gap: 4px;
+}
+
+.live-room-flier-on-air-controls select {
+  width: 100%;
+  color-scheme: dark;
+}
+
+.live-room-flier-on-air-controls button.is-selected {
+  border-color: var(--color-coral, #f79468);
+  background: rgba(247, 148, 104, 0.12);
+  color: #ffd0b7;
+}
+
+.live-room-source-placeholder {
+  padding: 12px;
+  color: #928a9e;
+  font-size: 10px;
+  text-align: center;
+}
+
+.live-room-source-card-caption {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+}
+
+.live-room-source-card-caption strong {
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-room-source-card-caption small {
+  flex: none;
+  color: #9690a2;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.live-room-source-card.is-on-air .live-room-source-card-caption small {
+  color: #ffb18e;
+}
+
+.live-room-invite-heading {
+  margin-top: 9px;
+}
+
+.live-room-presenter-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.live-room-presenter-list > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.live-room-presenter-list > li.is-on-air {
+  border-color: rgba(247, 148, 104, 0.7);
+  box-shadow: inset 3px 0 0 var(--color-coral, #f79468);
+}
+
+.live-room-presenter-list .live-room-presenter-person {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.live-room-presenter-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.live-room-presenter-row-actions button {
+  display: inline-flex;
+  min-height: 31px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #eee6fa;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.live-room-presenter-row-actions small {
+  align-self: center;
+  color: #9690a2;
+  font-size: 10px;
+}
+
+.live-room-presenter-row-actions .live-room-presenter-revoke {
+  border-color: rgba(255, 111, 111, 0.3);
+  color: #ffb0a5;
+}
+
+.live-room-presenter-row-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (max-width: 650px) {
+  .live-room-presenter-list > li {
+    grid-template-columns: 1fr;
+  }
+
+  .live-room-presenter-row-actions {
+    justify-content: flex-start;
+  }
+}
+
+.live-room-recording {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 22px 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.live-room-recording.is-recording {
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.055);
+}
+
+.live-room-recording-status {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.live-room-recording-status > span:last-child {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.live-room-recording-status strong {
+  color: #f0eef8;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.live-room-recording-status small {
+  overflow: hidden;
+  color: #9b9aaa;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-room-recording-dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border: 1px solid #82818d;
+  border-radius: 50%;
+  background: #5c5b65;
+}
+
+.live-room-recording.is-recording .live-room-recording-dot {
+  border-color: #ff716b;
+  background: #ef4444;
+  box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.13);
+  animation: live-room-recording-pulse 1.5s ease-in-out infinite;
+}
+
+.live-room-recording-stop,
+.live-room-recording-saving {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  flex: none;
+  padding: 0 12px;
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  border-radius: 9px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ffaba5;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.live-room-recording-stop {
+  cursor: pointer;
+}
+
+.live-room-recording-stop:hover {
+  background: rgba(239, 68, 68, 0.17);
+}
+
+.live-room-recording-saving {
+  border-color: var(--color-border);
+  background: rgba(255, 255, 255, 0.035);
+  color: #c4bfd3;
+}
+
+.live-room-toast {
+  position: fixed;
+  z-index: 20;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(420px, calc(100vw - 36px));
+  padding: 15px 17px;
+  border: 1px solid rgba(247, 148, 104, 0.28);
+  border-radius: 12px;
+  background: #191821;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.4);
+  color: #f1eff7;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.live-room-toast svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-coral);
+}
+
+@keyframes live-room-recording-pulse {
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.06); }
+}
+
 .live-room-message.is-success {
   color: #8be0b8;
 }
@@ -242,6 +1420,12 @@
   font-size: 12px;
   font-weight: 600;
   transition: transform var(--transition-fast), background var(--transition-fast), opacity var(--transition-fast);
+}
+
+.live-room-return {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+  color: #e1dce9;
 }
 
 .live-room-control:hover:not(:disabled) {
@@ -282,8 +1466,15 @@
   }
 
   .live-room-heading {
+    flex-wrap: wrap;
+    align-items: center;
     gap: 12px;
     padding: 20px 18px 17px;
+  }
+
+  .live-room-heading > div:first-child {
+    flex: 1 1 210px;
+    min-width: 0;
   }
 
   .live-room-heading h2 {
@@ -291,9 +1482,10 @@
   }
 
   .live-room-heading p {
-    max-width: 230px;
+    max-width: 100%;
     font-size: 11px;
     line-height: 1.5;
+    overflow-wrap: anywhere;
   }
 
   .live-room-viewers {
@@ -324,10 +1516,41 @@
     aspect-ratio: 4 / 3;
   }
 
+  .live-room-audience {
+    grid-template-columns: 1fr;
+    padding: 13px;
+  }
+
+  .live-room-attendance,
+  .live-room-access {
+    padding: 14px;
+  }
+
   .live-room-controls {
     flex-wrap: wrap;
     gap: 8px;
     padding: 16px 12px 18px;
+  }
+
+  .live-room-recording {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-inline: 14px;
+  }
+
+  .live-room-recording-stop,
+  .live-room-recording-saving {
+    width: 100%;
+  }
+
+  .live-room-toast {
+    right: 18px;
+    bottom: 18px;
+  }
+
+  .live-room-studio-toast {
+    right: 18px;
+    bottom: 88px;
   }
 
   .live-room-control {
@@ -345,4 +1568,41 @@
   .live-room-message {
     margin-inline: 17px;
   }
+}
+
+@media (max-width: 420px) {
+  .live-room-heading {
+    align-items: flex-start;
+  }
+
+  .live-room-viewers {
+    margin-left: 0;
+  }
+
+  .live-room-section-heading {
+    align-items: flex-start;
+  }
+
+  .live-room-access-toggle {
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+.live-room-owner-pause-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 11px 12px;
+  border: 1px solid rgba(239, 68, 68, 0.24);
+  border-radius: 11px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #ffb0a7;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.live-room-owner-pause-notice svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
 }

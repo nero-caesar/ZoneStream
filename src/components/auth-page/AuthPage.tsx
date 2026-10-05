@@ -4,10 +4,11 @@ import AccountForm from "../account-form/AccountForm";
 import "./auth-page.css";
 
 export default function AuthPage({ portal, mode }: { portal: Portal; mode: FormMode }) {
+  const portalLabel = portal === "church" ? "Church" : portal === "zonal" ? "Zonal Church" : "Individual";
   return (
-    <main className={`auth-layout ${portal === "church" ? "auth-church" : "auth-individual"}`}>
+    <main className={`auth-layout auth-${portal}`}>
       <MarketingPanel portal={portal} />
-      <section className="auth-panel" aria-label={`${portal === "church" ? "Church" : "Individual"} account access`}>
+      <section className="auth-panel" aria-label={`${portalLabel} account access`}>
         <AccountForm portal={portal} mode={mode} />
       </section>
     </main>

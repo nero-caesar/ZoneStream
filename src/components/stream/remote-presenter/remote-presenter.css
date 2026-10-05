@@ -1,0 +1,318 @@
+.presenter-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 28px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(132, 78, 198, 0.16), transparent 48%), #090912;
+  color: var(--color-text-primary, #f7f4ff);
+}
+
+.presenter-card {
+  width: min(100%, 760px);
+  padding: clamp(22px, 5vw, 42px);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.12));
+  border-radius: 24px;
+  background: rgba(17, 16, 27, 0.94);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.38);
+}
+
+.presenter-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 34px;
+  color: #d4c7e9;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.presenter-eyebrow {
+  color: #bd91ee;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.presenter-card h1 {
+  margin: 9px 0 8px;
+  font-size: clamp(26px, 5vw, 38px);
+  letter-spacing: -0.045em;
+}
+
+.presenter-card > p,
+.presenter-description {
+  color: #b8b2c6;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.presenter-card strong {
+  color: #f4edff;
+}
+
+.presenter-login-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.presenter-login-options a {
+  display: grid;
+  gap: 7px;
+  padding: 17px;
+  border: 1px solid rgba(180, 136, 230, 0.28);
+  border-radius: 14px;
+  background: rgba(147, 89, 203, 0.09);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.presenter-login-options a:hover {
+  border-color: #b98bea;
+  background: rgba(147, 89, 203, 0.16);
+}
+
+.presenter-login-options span {
+  color: #aaa2b9;
+  font-size: 12px;
+  font-weight: 450;
+}
+
+.presenter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.presenter-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #c7bfd2;
+  font-size: 12px;
+}
+
+.presenter-status span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9d8da9;
+}
+
+.presenter-status.is-live span {
+  background: #43d390;
+  box-shadow: 0 0 0 4px rgba(67, 211, 144, 0.14);
+}
+
+.presenter-preview {
+  position: relative;
+  display: grid;
+  min-height: 240px;
+  overflow: hidden;
+  place-items: center;
+  margin-top: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: #05050a;
+  aspect-ratio: 16 / 9;
+}
+
+.presenter-preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.presenter-preview-placeholder {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  color: #90889b;
+  font-size: 13px;
+}
+
+.presenter-preview-placeholder svg {
+  font-size: 28px;
+}
+
+.presenter-name-tag {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.66);
+  color: white;
+  font-size: 12px;
+}
+
+.presenter-error {
+  padding: 11px 13px;
+  border: 1px solid rgba(255, 112, 112, 0.28);
+  border-radius: 10px;
+  background: rgba(255, 75, 75, 0.08);
+  color: #ffb1a5 !important;
+}
+
+.presenter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.presenter-controls button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8f4ff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.presenter-controls button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.presenter-controls .presenter-connect {
+  width: 100%;
+  border-color: transparent;
+  background: linear-gradient(110deg, #a654d6, #653fc6);
+}
+
+.presenter-controls .is-off {
+  border-color: rgba(255, 112, 112, 0.34);
+  color: #ffb1a5;
+}
+
+.presenter-controls .presenter-leave {
+  margin-left: auto;
+  border-color: rgba(255, 112, 112, 0.35);
+  background: rgba(255, 78, 78, 0.11);
+  color: #ffaca0;
+}
+
+.presenter-audio-note {
+  margin: 16px 0 0;
+  color: #948da0 !important;
+  font-size: 11px !important;
+}
+
+.presenter-program-monitor {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 15px;
+  border: 1px solid rgba(180, 136, 230, 0.25);
+  border-radius: 16px;
+  background: rgba(147, 89, 203, 0.07);
+}
+
+.presenter-monitor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.presenter-monitor-heading h2 {
+  margin: 5px 0 0;
+  color: #f4edff;
+  font-size: 16px;
+}
+
+.presenter-monitor-state {
+  flex: none;
+  color: #aaa2b9;
+  font-size: 10px;
+}
+
+.presenter-monitor-state.is-connected {
+  color: #79e4b2;
+}
+
+.presenter-monitor-screen {
+  position: relative;
+  display: grid;
+  min-height: 180px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: #07070b;
+  aspect-ratio: 16 / 9;
+}
+
+.presenter-monitor-screen video,
+.presenter-monitor-screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.presenter-monitor-placeholder {
+  padding: 18px;
+  color: #aaa2b9;
+  font-size: 12px;
+  text-align: center;
+}
+
+.presenter-monitor-audio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.presenter-monitor-audio-button {
+  justify-self: start;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid rgba(180, 136, 230, 0.35);
+  border-radius: 8px;
+  background: rgba(147, 89, 203, 0.14);
+  color: #f4edff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+}
+
+@media (max-width: 560px) {
+  .presenter-shell {
+    padding: 16px;
+  }
+
+  .presenter-login-options {
+    grid-template-columns: 1fr;
+  }
+
+  .presenter-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .presenter-preview {
+    min-height: 180px;
+  }
+
+  .presenter-controls .presenter-leave {
+    margin-left: 0;
+  }
+}

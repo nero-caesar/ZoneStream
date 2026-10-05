@@ -1,5 +1,5 @@
-import AuthPage from "../../components/auth-page/AuthPage";
+import { redirect } from "next/navigation";
 
 export default function ChurchSignupPage() {
-  return <AuthPage portal="church" mode="create" />;
+  redirect("/login-page-church");
 }

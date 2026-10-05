@@ -1,0 +1,10 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ZoneStream reads and writes Firestore only through its trusted server.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

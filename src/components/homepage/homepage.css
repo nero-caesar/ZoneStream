@@ -3,14 +3,14 @@
   isolation: isolate;
   min-height: 100vh;
   min-height: 100svh;
-  overflow-x: clip;
+  overflow: clip;
   background:
     radial-gradient(ellipse at 91% 32%, rgba(71, 38, 144, 0.23), transparent 34%),
     linear-gradient(115deg, #0b0c1b 0%, #101128 54%, #191638 100%);
 }
 
 .selection-glow {
-  position: absolute;
+  position: fixed;
   z-index: -1;
   width: clamp(250px, 27vw, 490px);
   aspect-ratio: 1;
@@ -59,6 +59,8 @@
   gap: 10px;
   color: #c3c4d4;
   font-size: 13px;
+  text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
 .secure-label svg {
