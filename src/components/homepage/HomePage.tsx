@@ -63,7 +63,7 @@ export default function HomePage() {
             <Link href="/login-page-zonal" className="selection-studio-link">
               <FiRadio aria-hidden="true" /> Zonal Church studio
             </Link>
-            <MakerSignature />
+            <MakerSignature brand="zendot" />
           </div>
         </footer>
       </div>

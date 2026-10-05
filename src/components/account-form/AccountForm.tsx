@@ -37,6 +37,9 @@ function errorMessage(error: unknown): string {
   if (code.includes("auth/email-already-in-use")) return "An account already uses this email. Try signing in instead.";
   if (code.includes("auth/weak-password")) return "Choose a password with at least 8 characters.";
   if (code.includes("auth/too-many-requests")) return "Too many attempts. Wait a little and try again.";
+  if (error instanceof Error && /unexpected end of json|json parse|failed to execute ['\"]?json|unexpected token|failed to fetch|networkerror|load failed/i.test(error.message)) {
+    return "We couldn’t complete your sign-in. Please check your connection and try again.";
+  }
   if (error instanceof Error && /firebase|cloudflare|livekit|identitytoolkit/i.test(error.message)) return "We couldn’t complete that request. Please try again.";
   if (error instanceof Error && error.message) return error.message;
   return "We couldn’t complete that request. Please try again.";
@@ -48,8 +51,21 @@ async function postJson<T extends ProfileResult>(url: string, body: unknown): Pr
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const result = await response.json() as T;
-  if (!response.ok) throw new Error(result.error || "We couldn’t complete that request.");
+  const responseText = await response.text();
+  let result: T | null = null;
+
+  if (responseText.trim()) {
+    try {
+      result = JSON.parse(responseText) as T;
+    } catch {
+      // A proxy or server failure can return an empty body or an HTML error page.
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(result?.error || "We couldn’t complete that request. Please try again.");
+  }
+  if (!result) throw new Error("We couldn’t complete that request. Please try again in a moment.");
   return result;
 }
 
