@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isSameOriginRequest } from "../../../../lib/auth/server";
-import { FieldValue } from "firebase-admin/firestore";
 import { getFirebaseAdmin } from "../../../../lib/firebase/admin";
 import { sendEmailJsTemplate } from "../../../../lib/email/emailjs";
 import { ZONAL_ACCOUNT_UID } from "../../../../lib/auth/zonal-password";
@@ -41,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     const zonalUser = await auth.getUser(ZONAL_ACCOUNT_UID);
     if (!zonalUser.email) {
-      await accessRef.update({ lastRecoveryRequestAt: FieldValue.delete() }).catch(() => undefined);
+      await accessRef.update({ lastRecoveryRequestAt: 0 }).catch(() => undefined);
       return jsonNoStore({ error: "Studio recovery is not configured. Please contact the platform owner." }, 503);
     }
     const recoveryEmail = process.env.ZONAL_RECOVERY_EMAIL?.trim().toLowerCase() || "nzehoko388@gmail.com";
@@ -49,7 +48,7 @@ export async function POST(request: NextRequest) {
     try {
       await sendEmailJsTemplate({ toEmail: recoveryEmail, appName: "ZoneStream", resetLink });
     } catch {
-      await accessRef.update({ lastRecoveryRequestAt: FieldValue.delete() }).catch(() => undefined);
+      await accessRef.update({ lastRecoveryRequestAt: 0 }).catch(() => undefined);
       return jsonNoStore({ error: "The reset link could not be emailed. Please try again later." }, 503);
     }
     return jsonNoStore({ message: `A password reset link has been sent to ${recoveryEmail}. Check your inbox and spam folder.` });
