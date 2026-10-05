@@ -24,7 +24,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Only individuals can create their own accounts. Churches are registered by the Zonal Church." }, { status: 403 });
   }
 
-  const claims = await verifyIdToken(body.idToken);
+  let claims: Awaited<ReturnType<typeof verifyIdToken>>;
+  try {
+    claims = await verifyIdToken(body.idToken);
+  } catch (error) {
+    const details = error && typeof error === "object"
+      ? error as { name?: unknown; code?: unknown }
+      : null;
+    console.error("[ZoneStream auth] Sign-up token verifier unavailable", {
+      name: typeof details?.name === "string" ? details.name : typeof error,
+      code: typeof details?.code === "string" ? details.code : undefined,
+    });
+    return NextResponse.json({ error: "We couldn't verify your sign-up right now. Please try again later." }, { status: 503 });
+  }
   if (!claims || typeof body.idToken !== "string" || !claims.email) {
     return NextResponse.json({ error: "Your sign-up has expired. Please create the account again." }, { status: 401 });
   }
@@ -57,7 +69,14 @@ export async function POST(request: NextRequest) {
     await accountRef.create(profile);
     await recordPlatformActivity({ action: "individual_registered", label: `${displayName} created an individual account`, actorType: "individual", actorName: displayName, subjectId: claims.uid });
     return NextResponse.json({ profile }, { status: 201 });
-  } catch {
+  } catch (error) {
+    const details = error && typeof error === "object"
+      ? error as { name?: unknown; code?: unknown }
+      : null;
+    console.error("[ZoneStream auth] Account registration failed", {
+      name: typeof details?.name === "string" ? details.name : typeof error,
+      code: typeof details?.code === "string" ? details.code : undefined,
+    });
     return NextResponse.json({ error: "We could not finish creating your account. Please try again." }, { status: 503 });
   }
 }

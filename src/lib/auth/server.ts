@@ -20,10 +20,17 @@ export function isSameOriginRequest(request: NextRequest): boolean {
 
 export async function verifyIdToken(idToken: unknown) {
   if (typeof idToken !== "string" || idToken.length < 20) return null;
+  const { auth } = getFirebaseAdmin();
   try {
-    const { auth } = getFirebaseAdmin();
     return await auth.verifyIdToken(idToken, true);
-  } catch {
+  } catch (error) {
+    const details = error && typeof error === "object"
+      ? error as { name?: unknown; code?: unknown }
+      : null;
+    console.error("[ZoneStream auth] Firebase ID-token verification failed", {
+      name: typeof details?.name === "string" ? details.name : typeof error,
+      code: typeof details?.code === "string" ? details.code : undefined,
+    });
     return null;
   }
 }

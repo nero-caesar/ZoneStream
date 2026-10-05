@@ -20,7 +20,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Please send a valid sign-in request." }, { status: 400 });
   }
 
-  const claims = await verifyIdToken(body.idToken);
+  let claims: Awaited<ReturnType<typeof verifyIdToken>>;
+  try {
+    claims = await verifyIdToken(body.idToken);
+  } catch (error) {
+    const details = error && typeof error === "object"
+      ? error as { name?: unknown; code?: unknown }
+      : null;
+    console.error("[ZoneStream auth] Sign-in token verifier unavailable", {
+      name: typeof details?.name === "string" ? details.name : typeof error,
+      code: typeof details?.code === "string" ? details.code : undefined,
+    });
+    return NextResponse.json({ error: "We couldn't verify your sign-in right now. Please try again later." }, { status: 503 });
+  }
   if (!claims || typeof body.idToken !== "string") {
     return NextResponse.json({ error: "Your sign-in has expired. Please sign in again." }, { status: 401 });
   }
@@ -58,7 +70,14 @@ export async function POST(request: NextRequest) {
       subjectId: profile.uid,
     });
     return sessionResponse;
-  } catch {
+  } catch (error) {
+    const details = error && typeof error === "object"
+      ? error as { name?: unknown; code?: unknown }
+      : null;
+    console.error("[ZoneStream auth] Session creation failed", {
+      name: typeof details?.name === "string" ? details.name : typeof error,
+      code: typeof details?.code === "string" ? details.code : undefined,
+    });
     return NextResponse.json({ error: "We could not finish signing you in. Please try again." }, { status: 503 });
   }
 }

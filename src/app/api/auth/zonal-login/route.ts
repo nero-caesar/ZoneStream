@@ -63,6 +63,10 @@ export async function POST(request: NextRequest) {
         await recordZonalLoginFailure(request);
         return NextResponse.json({ error: "The Zonal Church password is incorrect." }, { status: 401 });
       }
+      console.error("[ZoneStream auth] Firebase rejected the Zonal sign-in request", {
+        status: firebaseResponse.status,
+        code: firebaseCode || "unknown",
+      });
       return NextResponse.json({ error: "We could not sign in to the Zonal Church account. Please try again." }, { status: 503 });
     }
 
@@ -85,7 +89,14 @@ export async function POST(request: NextRequest) {
     );
     response.headers.set("Cache-Control", "no-store");
     return response;
-  } catch {
+  } catch (error) {
+    const details = error && typeof error === "object"
+      ? error as { name?: unknown; code?: unknown }
+      : null;
+    console.error("[ZoneStream auth] Zonal sign-in failed", {
+      name: typeof details?.name === "string" ? details.name : typeof error,
+      code: typeof details?.code === "string" ? details.code : undefined,
+    });
     return NextResponse.json({ error: "We could not sign in to the Zonal Church account. Please try again." }, { status: 503 });
   }
 }
