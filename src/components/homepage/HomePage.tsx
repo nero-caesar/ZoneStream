@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FiHome, FiRadio, FiShield, FiUser } from "react-icons/fi";
 import Brand from "../brand/Brand";
 import Eyebrow from "../eyebrow/Eyebrow";
+import MakerSignature from "../maker-signature/MakerSignature";
 import PortalCard from "../portal-card/PortalCard";
 import "./homepage.css";
 
@@ -62,7 +63,7 @@ export default function HomePage() {
             <Link href="/login-page-zonal" className="selection-studio-link">
               <FiRadio aria-hidden="true" /> Zonal Church studio
             </Link>
-            <span>Built for the zone, by the zone.</span>
+            <MakerSignature />
           </div>
         </footer>
       </div>

@@ -1,0 +1,110 @@
+.maker-signature {
+  --maker-coin-size: 43px;
+  --maker-word-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  color: #ecd39b;
+}
+
+.maker-signature__coin {
+  position: relative;
+  display: block;
+  width: var(--maker-coin-size);
+  height: var(--maker-coin-size);
+  flex: 0 0 var(--maker-coin-size);
+  overflow: hidden;
+  border: 1px solid rgba(227, 184, 103, 0.7);
+  border-radius: 50%;
+  background: #08090d;
+  box-shadow: inset 0 0 0 3px rgba(227, 184, 103, 0.12), 0 3px 12px rgba(0, 0, 0, 0.28);
+}
+
+.maker-signature__emblem-art {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: block;
+  width: 210%;
+  max-width: none;
+  height: auto;
+  transform: translateX(-50%);
+}
+
+.maker-signature__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  line-height: 1;
+}
+
+.maker-signature__built-by {
+  color: rgba(231, 226, 215, 0.72);
+  font-size: 8px;
+  font-weight: 450;
+  letter-spacing: 0.09em;
+}
+
+.maker-signature__wordmark {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  color: #e5c27d;
+  font-size: var(--maker-word-size);
+  font-weight: 720;
+  letter-spacing: 0.13em;
+  line-height: 1;
+}
+
+.maker-signature__bar-e {
+  display: inline-flex;
+  width: 8px;
+  flex-direction: column;
+  gap: 2px;
+  margin-inline: 1px 2px;
+}
+
+.maker-signature__bar-e i {
+  display: block;
+  width: 100%;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.maker-signature__technologies {
+  margin-top: 2px;
+  color: rgba(231, 226, 215, 0.72);
+  font-size: 6px;
+  font-weight: 550;
+  letter-spacing: 0.28em;
+}
+
+.maker-signature--full {
+  --maker-coin-size: 50px;
+  --maker-word-size: 13px;
+  gap: 12px;
+}
+
+.maker-signature--full .maker-signature__built-by {
+  font-size: 9px;
+}
+
+.maker-signature--full .maker-signature__technologies {
+  font-size: 6.5px;
+}
+
+@media (max-width: 420px) {
+  .maker-signature {
+    --maker-coin-size: 39px;
+    --maker-word-size: 11px;
+    gap: 8px;
+  }
+
+  .maker-signature--full {
+    --maker-coin-size: 44px;
+    --maker-word-size: 12px;
+  }
+}
