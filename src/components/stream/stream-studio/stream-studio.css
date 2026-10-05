@@ -520,13 +520,21 @@
 
 .stream-studio-library-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, auto);
   align-items: center;
   gap: 12px;
   padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.075);
   border-radius: 11px;
   background: rgba(255, 255, 255, 0.025);
+}
+
+.stream-studio-library-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 7px;
 }
 
 .stream-studio-library-video-icon {
@@ -594,6 +602,39 @@
 .stream-studio-delete-button:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.stream-studio-preview-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(170, 159, 240, 0.26);
+  border-radius: 9px;
+  background: rgba(142, 123, 232, 0.07);
+  color: #d1c7ff;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.stream-studio-preview-button:hover {
+  border-color: rgba(170, 159, 240, 0.5);
+  background: rgba(142, 123, 232, 0.14);
+}
+
+.stream-studio-library-preview {
+  grid-column: 1 / -1;
+  display: block;
+  width: min(100%, 760px);
+  max-height: min(65vh, 520px);
+  margin: 4px auto 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: #050509;
 }
 
 .stream-studio-upload-progress {
@@ -843,8 +884,11 @@
   }
 
   .stream-studio-delete-button {
-    grid-column: 2 / -1;
-    justify-self: start;
     min-height: 30px;
+  }
+
+  .stream-studio-library-actions {
+    grid-column: 2 / -1;
+    justify-content: flex-start;
   }
 }

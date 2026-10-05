@@ -24,6 +24,7 @@ type StudioRecording = {
   id: string;
   title: string;
   fileName: string;
+  mimeType: string;
   sizeBytes: number;
   createdAt: number;
   downloadUrl: string;
@@ -42,6 +43,8 @@ function UploadedVideoLibrary({
   deletingId: string;
   onDelete: (recording: StudioRecording) => void;
 }) {
+  const [previewingId, setPreviewingId] = useState("");
+
   return (
     <section className="stream-studio-library" aria-labelledby="stream-studio-library-title">
       <div className="stream-studio-library-heading">
@@ -63,15 +66,39 @@ function UploadedVideoLibrary({
                 <small>{recording.fileName} · Uploaded {recording.createdAt ? new Date(recording.createdAt).toLocaleString() : "recently"}</small>
               </span>
               <span className="stream-studio-library-status">On server</span>
-              <button
-                className="stream-studio-delete-button"
-                type="button"
-                onClick={() => onDelete(recording)}
-                disabled={deletingId === recording.id}
-                aria-label={`Remove ${recording.title} from the server`}
-              >
-                <FiTrash2 aria-hidden="true" /> {deletingId === recording.id ? "Removing…" : "Remove"}
-              </button>
+              <div className="stream-studio-library-actions">
+                <button
+                  className="stream-studio-preview-button"
+                  type="button"
+                  onClick={() => setPreviewingId((current) => current === recording.id ? "" : recording.id)}
+                  aria-expanded={previewingId === recording.id}
+                  aria-controls={`recording-preview-${recording.id}`}
+                >
+                  <FiVideo aria-hidden="true" /> {previewingId === recording.id ? "Hide preview" : "Play video"}
+                </button>
+                <button
+                  className="stream-studio-delete-button"
+                  type="button"
+                  onClick={() => onDelete(recording)}
+                  disabled={deletingId === recording.id}
+                  aria-label={`Remove ${recording.title} from the server`}
+                >
+                  <FiTrash2 aria-hidden="true" /> {deletingId === recording.id ? "Removing…" : "Remove"}
+                </button>
+              </div>
+              {previewingId === recording.id ? (
+                <video
+                  id={`recording-preview-${recording.id}`}
+                  className="stream-studio-library-preview"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  aria-label={`Preview ${recording.title}`}
+                >
+                  <source src={recording.downloadUrl} type={recording.mimeType} />
+                  Your browser cannot play this video format.
+                </video>
+              ) : null}
             </li>
           ))}
         </ul>
