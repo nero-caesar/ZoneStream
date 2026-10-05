@@ -67,7 +67,9 @@ export default function SessionInactivityGuard() {
       } catch {
         // The server session cookies are cleared even if local storage is unavailable.
       }
-      if (active) router.replace("/");
+      // Let the current route's server guard choose its own sign-in page.
+      // Sending every expired session to / made normal navigation snap home.
+      if (active) router.refresh();
     };
 
     const scheduleLogout = () => {
@@ -120,7 +122,9 @@ export default function SessionInactivityGuard() {
         } catch {
           // The server session cookies are cleared even if local storage is unavailable.
         }
-        if (active) router.replace("/");
+        // Re-render the current route after clearing the expired cookies. Protected
+        // pages can then redirect to the matching portal; public pages stay put.
+        if (active) router.refresh();
         return;
       }
       if (accountSession || developerSession) {
