@@ -188,5 +188,5 @@ export async function removeR2Upload(key: string, uploadId?: string) {
   if (uploadId) {
     await client.send(new AbortMultipartUploadCommand({ Bucket: bucketName, Key: key, UploadId: uploadId })).catch(() => undefined);
   }
-  await client.send(new DeleteObjectCommand({ Bucket: bucketName, Key: key })).catch(() => undefined);
+  await client.send(new DeleteObjectCommand({ Bucket: bucketName, Key: key }));
 }

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRequestAccount, isSameOriginRequest } from "../../../lib/auth/server";
 import { getStudioOperator } from "../../../lib/auth/studio-operator";
 import { recordPlatformActivity } from "../../../lib/audit/platform-activity";
-import { verifyDeveloperRequest } from "../../../lib/auth/developer-space";
 import { getFirebaseAdmin } from "../../../lib/firebase/admin";
 import { sendIndividualNotification } from "../../../lib/notifications/send";
 import {
@@ -16,11 +15,20 @@ import {
 export const runtime = "nodejs";
 
 type PublishPayload = { id?: unknown };
+type StudioRecording = {
+  id: string;
+  title: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: number;
+  downloadUrl: string;
+};
 
 export async function GET(request: NextRequest) {
-  const developerAccess = await verifyDeveloperRequest(request);
-  const account = developerAccess ? null : await getRequestAccount(request);
-  if (!account && !developerAccess) return NextResponse.json({ error: "Sign in to view recorded messages." }, { status: 401 });
+  const operator = await getStudioOperator(request);
+  const account = operator ? null : await getRequestAccount(request);
+  if (!account && !operator) return NextResponse.json({ error: "Sign in to view recorded messages." }, { status: 401 });
 
   if (!isR2StorageConfigured()) {
     return NextResponse.json({ sharedStorageAvailable: false, recordings: [] }, { headers: { "Cache-Control": "no-store" } });
@@ -54,7 +62,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       sharedStorageAvailable: true,
-      recordings: recordings.filter((recording) => recording !== null),
+      recordings: recordings.filter((recording): recording is StudioRecording => recording !== null),
     }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ sharedStorageAvailable: false, recordings: [] }, { headers: { "Cache-Control": "no-store" } });
@@ -165,16 +173,41 @@ export async function DELETE(request: NextRequest) {
   const recordingSnapshot = await recordingRef.get();
   if (!recordingSnapshot.exists) return NextResponse.json({ cancelled: true });
   const recording = recordingSnapshot.data()!;
-  const expectedObjectKey = "recordings/" + operator.uid + "/" + id;
-  if (recording.status !== "uploading" || recording.uploadedBy !== operator.uid || recording.objectKey !== expectedObjectKey) {
-    return NextResponse.json({ error: "Only a pending upload can be cancelled." }, { status: 409 });
+  const uploadedBy = typeof recording.uploadedBy === "string" ? recording.uploadedBy : "";
+  const expectedObjectKey = uploadedBy ? `recordings/${uploadedBy}/${id}` : "";
+  const isPendingUpload = recording.status === "uploading";
+  const isPublishedRecording = recording.status === "ready";
+  if (
+    recording.storageProvider !== "r2" ||
+    !expectedObjectKey ||
+    recording.objectKey !== expectedObjectKey ||
+    (!isPendingUpload && !isPublishedRecording) ||
+    (isPendingUpload && uploadedBy !== operator.uid)
+  ) {
+    return NextResponse.json({ error: isPendingUpload ? "Only your own pending upload can be cancelled." : "This video cannot be removed." }, { status: 409 });
   }
 
   try {
-    await removeR2Upload(expectedObjectKey, typeof recording.multipartUploadId === "string" ? recording.multipartUploadId : undefined);
+    await removeR2Upload(
+      expectedObjectKey,
+      isPendingUpload && typeof recording.multipartUploadId === "string" ? recording.multipartUploadId : undefined,
+    );
     await recordingRef.delete();
-    return NextResponse.json({ cancelled: true }, { headers: { "Cache-Control": "no-store" } });
+    if (isPublishedRecording) {
+      const title = typeof recording.title === "string" ? recording.title.slice(0, 120) : "Recorded message";
+      await recordPlatformActivity({
+        action: "recording_deleted",
+        label: `${operator.displayName} removed a recorded message: ${title}`,
+        actorType: operator.kind,
+        actorName: operator.displayName,
+        subjectName: title,
+        subjectId: id,
+      });
+    }
+    return NextResponse.json({ deleted: true }, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ error: "The pending upload could not be cancelled." }, { status: 503 });
+    return NextResponse.json({
+      error: isPublishedRecording ? "The video could not be removed from the server." : "The pending upload could not be cancelled.",
+    }, { status: 503 });
   }
 }

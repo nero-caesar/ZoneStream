@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { FiArrowLeft, FiArrowRight, FiHardDrive, FiRadio, FiShield, FiUpload, FiUsers, FiVideo } from "react-icons/fi";
+import { FiArrowLeft, FiArrowRight, FiHardDrive, FiRadio, FiShield, FiTrash2, FiUpload, FiUsers, FiVideo } from "react-icons/fi";
 import Brand from "../../brand/Brand";
 import SignOutButton from "../../sign-out-button/SignOutButton";
 import ZonalPasswordRecovery from "../../zonal-password-recovery/ZonalPasswordRecovery";
@@ -19,6 +19,68 @@ type R2UploadPlan = {
   partUrls?: string[];
   error?: string;
 };
+
+type StudioRecording = {
+  id: string;
+  title: string;
+  fileName: string;
+  sizeBytes: number;
+  createdAt: number;
+  downloadUrl: string;
+};
+
+function UploadedVideoLibrary({
+  recordings,
+  loading,
+  error,
+  deletingId,
+  onDelete,
+}: {
+  recordings: StudioRecording[];
+  loading: boolean;
+  error: string;
+  deletingId: string;
+  onDelete: (recording: StudioRecording) => void;
+}) {
+  return (
+    <section className="stream-studio-library" aria-labelledby="stream-studio-library-title">
+      <div className="stream-studio-library-heading">
+        <div>
+          <span className="stream-studio-form-eyebrow">SHARED WITH VIEWERS</span>
+          <h2 id="stream-studio-library-title">Videos on the server</h2>
+        </div>
+        <span className="stream-studio-library-count">{recordings.length}</span>
+      </div>
+      <p className="stream-studio-library-description">These videos appear in Recorded Messages for individual and church viewers.</p>
+      {error ? <p className="stream-studio-error" role="alert">{error}</p> : null}
+      {loading ? <p className="stream-studio-library-empty">Loading uploaded videos…</p> : recordings.length ? (
+        <ul className="stream-studio-library-list">
+          {recordings.map((recording) => (
+            <li className="stream-studio-library-item" key={recording.id}>
+              <span className="stream-studio-library-video-icon"><FiVideo aria-hidden="true" /></span>
+              <span className="stream-studio-library-details">
+                <strong>{recording.title}</strong>
+                <small>{recording.fileName} · Uploaded {recording.createdAt ? new Date(recording.createdAt).toLocaleString() : "recently"}</small>
+              </span>
+              <span className="stream-studio-library-status">On server</span>
+              <button
+                className="stream-studio-delete-button"
+                type="button"
+                onClick={() => onDelete(recording)}
+                disabled={deletingId === recording.id}
+                aria-label={`Remove ${recording.title} from the server`}
+              >
+                <FiTrash2 aria-hidden="true" /> {deletingId === recording.id ? "Removing…" : "Remove"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : !error ? (
+        <p className="stream-studio-library-empty">No videos have been uploaded yet.</p>
+      ) : null}
+    </section>
+  );
+}
 
 function uploadBlobToR2(url: string, blob: Blob, onProgress: (loadedBytes: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -102,17 +164,29 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState("");
   const [uploadMessage, setUploadMessage] = useState("");
+  const [studioRecordings, setStudioRecordings] = useState<StudioRecording[]>([]);
+  const [recordingsLoading, setRecordingsLoading] = useState(true);
+  const [recordingsError, setRecordingsError] = useState("");
+  const [deletingRecordingId, setDeletingRecordingId] = useState("");
 
-  useEffect(() => {
-    let active = true;
-    fetch("/api/recordings", { cache: "no-store" })
-      .then(async (response) => response.ok
-        ? response.json() as Promise<{ sharedStorageAvailable?: boolean }>
-        : { sharedStorageAvailable: false })
-      .then((result) => { if (active) setSharedStorageAvailable(result.sharedStorageAvailable === true); })
-      .catch(() => { if (active) setSharedStorageAvailable(false); });
-    return () => { active = false; };
+  const refreshStudioRecordings = useCallback(async () => {
+    setRecordingsLoading(true);
+    try {
+      const response = await fetch("/api/recordings", { cache: "no-store" });
+      const result = await response.json() as { error?: string; sharedStorageAvailable?: boolean; recordings?: StudioRecording[] };
+      if (!response.ok) throw new Error(result.error ?? "The uploaded videos could not be loaded.");
+      setSharedStorageAvailable(result.sharedStorageAvailable === true);
+      setStudioRecordings(result.recordings ?? []);
+      setRecordingsError("");
+    } catch {
+      setSharedStorageAvailable(false);
+      setRecordingsError("The uploaded videos could not be loaded. Please refresh and try again.");
+    } finally {
+      setRecordingsLoading(false);
+    }
   }, []);
+
+  useEffect(() => { void refreshStudioRecordings(); }, [refreshStudioRecordings]);
 
   useEffect(() => {
     if (!recordingToast) return;
@@ -223,7 +297,8 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
       const publishResult = await publishResponse.json() as { error?: string };
       if (!publishResponse.ok) throw new Error(publishResult.error ?? "The video uploaded, but it could not be published to Recorded Messages.");
 
-      setUploadMessage("Added to the shared Recorded Messages library. Individuals and churches can watch it from their dashboards.");
+      setUploadMessage(`“${cleanTitle}” is now uploaded to the server and available in Recorded Messages for individual and church viewers.`);
+      await refreshStudioRecordings();
       setUploadFile(null);
       setUploadTitle("");
       const fileInput = document.getElementById("recording-video-file") as HTMLInputElement | null;
@@ -233,6 +308,24 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
       setUploadError(uploadFailure instanceof Error ? uploadFailure.message : "The video could not be saved. Please try again.");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function removeUploadedVideo(recording: StudioRecording) {
+    const confirmed = window.confirm(`Remove “${recording.title}” from the server? Viewers will no longer see or play it.`);
+    if (!confirmed) return;
+    setDeletingRecordingId(recording.id);
+    setRecordingsError("");
+    try {
+      const response = await fetch(`/api/recordings?id=${encodeURIComponent(recording.id)}`, { method: "DELETE" });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "This video could not be removed.");
+      setStudioRecordings((current) => current.filter((item) => item.id !== recording.id));
+      setUploadMessage(`“${recording.title}” was removed from the server and viewer library.`);
+    } catch (removeError) {
+      setRecordingsError(removeError instanceof Error ? removeError.message : "This video could not be removed. Please try again.");
+    } finally {
+      setDeletingRecordingId("");
     }
   }
   return (
@@ -306,6 +399,7 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
                 <FiArrowRight className="stream-studio-mode-arrow" aria-hidden="true" />
               </button>
             </div>
+            <UploadedVideoLibrary recordings={studioRecordings} loading={recordingsLoading} error={recordingsError} deletingId={deletingRecordingId} onDelete={(recording) => void removeUploadedVideo(recording)} />
           </section>
         ) : studioMode === "upload" ? (
           <section className="stream-studio-upload-page">
@@ -329,6 +423,7 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
                 <FiUpload aria-hidden="true" /> {uploading ? "Uploading video…" : "Upload to shared library"}
               </button>
             </form>
+            <UploadedVideoLibrary recordings={studioRecordings} loading={recordingsLoading} error={recordingsError} deletingId={deletingRecordingId} onDelete={(recording) => void removeUploadedVideo(recording)} />
           </section>
         ) : (
           <div className="stream-studio-layout">
