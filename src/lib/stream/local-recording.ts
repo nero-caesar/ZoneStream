@@ -25,6 +25,8 @@ type LocalDeviceRecorder = {
   setVideoTrack: (track: MediaStreamTrack | null) => void;
   setVideoImage: (image: HTMLImageElement | null) => void;
   setAudioTrack: (track: MediaStreamTrack | null) => void;
+  pause: () => boolean;
+  resume: () => boolean;
   stop: () => Promise<string>;
 };
 
@@ -295,6 +297,16 @@ export async function createLocalDeviceRecorder({
     setVideoTrack,
     setVideoImage,
     setAudioTrack,
+    pause: () => {
+      if (recorder.state !== "recording") return false;
+      recorder.pause();
+      return true;
+    },
+    resume: () => {
+      if (recorder.state !== "paused") return false;
+      recorder.resume();
+      return true;
+    },
     stop: () => {
       if (!stopPromise) {
         stopPromise = (async () => {

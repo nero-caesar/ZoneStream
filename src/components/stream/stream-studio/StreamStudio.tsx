@@ -178,6 +178,7 @@ async function uploadVideoToR2(plan: R2UploadPlan, file: File, onProgress: (prog
 
 export default function StreamStudio({ zonalName, developerMode = false }: { zonalName: string; developerMode?: boolean }) {
   const [session, setSession] = useState<StreamSession | null>(null);
+  const [leaveActiveBroadcast, setLeaveActiveBroadcast] = useState<(() => Promise<boolean>) | null>(null);
   const [studioMode, setStudioMode] = useState<"choose" | "stream" | "upload">("choose");
   const [title, setTitle] = useState("");
   const [starting, setStarting] = useState(false);
@@ -196,6 +197,16 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
   const [recordingsLoading, setRecordingsLoading] = useState(true);
   const [recordingsError, setRecordingsError] = useState("");
   const [deletingRecordingId, setDeletingRecordingId] = useState("");
+
+  const registerHostLeave = useCallback((leave: (() => Promise<boolean>) | null) => {
+    setLeaveActiveBroadcast(() => leave);
+  }, []);
+
+  const handleHostRoomLeave = useCallback(() => {
+    setSession(null);
+    setRecordingFileHandle(null);
+    setStudioMode("choose");
+  }, []);
 
   const refreshStudioRecordings = useCallback(async () => {
     setRecordingsLoading(true);
@@ -369,14 +380,14 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
             <Link className="stream-back-link" href={developerMode ? "/developer/churches" : "/zonal/churches"}><FiUsers aria-hidden="true" /> Manage churches</Link>
             {developerMode ? (
               <>
-                <SignOutButton developerMode />
-                <HistoryBackButton className="stream-back-link" fallbackHref="/developer/developer-space" />
+                <SignOutButton developerMode beforeSignOut={session ? leaveActiveBroadcast ?? undefined : undefined} />
+                <HistoryBackButton className="stream-back-link" fallbackHref="/developer/developer-space" beforeNavigate={session ? leaveActiveBroadcast ?? undefined : undefined} />
               </>
             ) : (
               <>
                 <ZonalPasswordRecovery context="studio" />
-                <SignOutButton />
-                <HistoryBackButton className="stream-back-link" fallbackHref="/" />
+                <SignOutButton beforeSignOut={session ? leaveActiveBroadcast ?? undefined : undefined} />
+                <HistoryBackButton className="stream-back-link" fallbackHref="/" beforeNavigate={session ? leaveActiveBroadcast ?? undefined : undefined} />
               </>
             )}
           </nav>
@@ -399,11 +410,8 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
               recordingAudioContext={recordingAudioContext}
               onRecordingMessage={setRecordingToast}
               onStreamStarted={notifyViewersThatStreamStarted}
-              onLeave={() => {
-                setSession(null);
-                setRecordingFileHandle(null);
-                setStudioMode("choose");
-              }}
+              onRegisterHostLeave={registerHostLeave}
+              onLeave={handleHostRoomLeave}
             />
           </section>
         ) : studioMode === "choose" ? (

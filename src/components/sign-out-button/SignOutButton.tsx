@@ -7,12 +7,25 @@ import { FiLogOut } from "react-icons/fi";
 import { getFirebaseClient } from "../../lib/firebase/client";
 import "./sign-out-button.css";
 
-export default function SignOutButton({ developerMode = false }: { developerMode?: boolean }) {
+export default function SignOutButton({
+  developerMode = false,
+  beforeSignOut,
+}: {
+  developerMode?: boolean;
+  beforeSignOut?: () => Promise<boolean>;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   async function logout() {
     setBusy(true);
+    if (beforeSignOut) {
+      const maySignOut = await beforeSignOut().catch(() => false);
+      if (!maySignOut) {
+        setBusy(false);
+        return;
+      }
+    }
     if (developerMode) {
       await fetch("/api/developer/session", { method: "DELETE" }).catch(() => undefined);
       window.dispatchEvent(new Event("zonestream:session-ended"));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -94,6 +94,14 @@ export default function AccountForm({ portal, mode }: { portal: Portal; mode: Fo
   const signInHref = isChurch ? "/login-page-church" : isZonal ? "/login-page-zonal" : "/login-page-individual";
   const createHref = "/signup-page-individual";
 
+  function preservePresenterReturn(event: MouseEvent<HTMLAnchorElement>, destination: string) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const nextPath = getPresenterReturnPath();
+    if (!nextPath) return;
+    event.preventDefault();
+    router.push(`${destination}?next=${encodeURIComponent(nextPath)}`);
+  }
+
   const title = activeMode === "reset"
     ? isZonal ? "Recover studio access" : "Reset your password"
     : activeMode === "create"
@@ -116,7 +124,7 @@ export default function AccountForm({ portal, mode }: { portal: Portal; mode: Fo
       throw new Error("This account belongs to a different ZoneStream portal.");
     }
     window.dispatchEvent(new Event("zonestream:session-started"));
-    router.replace(expectedRole === "zonal" ? "/stream/studio" : getPresenterReturnPath() ?? "/dashboard");
+    router.push(expectedRole === "zonal" ? "/stream/studio" : getPresenterReturnPath() ?? "/dashboard");
   }
 
   async function createIndividualProfile(user: User, displayName: string) {
@@ -145,7 +153,7 @@ export default function AccountForm({ portal, mode }: { portal: Portal; mode: Fo
         if (activeMode === "signin") {
           await postJson("/api/auth/zonal-login", { password });
           window.dispatchEvent(new Event("zonestream:session-started"));
-          router.replace("/stream/studio");
+          router.push("/stream/studio");
           return;
         }
 
@@ -227,8 +235,8 @@ export default function AccountForm({ portal, mode }: { portal: Portal; mode: Fo
 
       {isIndividual && activeMode !== "reset" ? (
         <nav className="form-tabs" aria-label="Account options">
-          <Link href="/login-page-individual" aria-current={mode === "signin" ? "page" : undefined} className={mode === "signin" ? "form-tab active" : "form-tab"}>Sign in</Link>
-          <Link href={createHref} aria-current={mode === "create" ? "page" : undefined} className={mode === "create" ? "form-tab active" : "form-tab"}>Create account</Link>
+          <Link href={signInHref} onClick={(event) => preservePresenterReturn(event, signInHref)} aria-current={mode === "signin" ? "page" : undefined} className={mode === "signin" ? "form-tab active" : "form-tab"}>Sign in</Link>
+          <Link href={createHref} onClick={(event) => preservePresenterReturn(event, createHref)} aria-current={mode === "create" ? "page" : undefined} className={mode === "create" ? "form-tab active" : "form-tab"}>Create account</Link>
         </nav>
       ) : activeMode === "reset" ? (
         <button className="reset-back" type="button" onClick={switchToSignIn}><FiArrowLeft size={15} aria-hidden="true" /> Back to sign in</button>
@@ -301,7 +309,7 @@ export default function AccountForm({ portal, mode }: { portal: Portal; mode: Fo
       {isZonal ? (
         activeMode === "create" ? <p className="account-switch">Finished setting the password? <Link href={signInHref}>Return to studio sign in</Link></p>
           : null
-      ) : !isChurch ? <p className="account-switch">{activeMode === "reset" ? <>Remember your password? <button type="button" onClick={switchToSignIn}>Sign in</button></> : activeMode === "create" ? <>Already have an account? <Link href={signInHref}>Sign in</Link></> : <>New to ZoneStream? <Link href={createHref}>Create an account</Link></>}</p> : null}
+      ) : !isChurch ? <p className="account-switch">{activeMode === "reset" ? <>Remember your password? <button type="button" onClick={switchToSignIn}>Sign in</button></> : activeMode === "create" ? <>Already have an account? <Link href={signInHref} onClick={(event) => preservePresenterReturn(event, signInHref)}>Sign in</Link></> : <>New to ZoneStream? <Link href={createHref} onClick={(event) => preservePresenterReturn(event, createHref)}>Create an account</Link></>}</p> : null}
       {isChurch ? <p className="account-switch church-access-note">Need a church code? Contact the Zonal Church.</p> : null}
       {activeMode !== "reset" && !isChurch && !isZonal ? <p className="terms-copy">By continuing, you agree to ZoneStream&apos;s <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a>.</p> : null}
     </div>

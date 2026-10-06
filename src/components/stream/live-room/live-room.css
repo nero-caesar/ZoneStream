@@ -1290,6 +1290,11 @@
   background: rgba(239, 68, 68, 0.055);
 }
 
+.live-room-recording.is-paused {
+  border-color: rgba(250, 204, 21, 0.28);
+  background: rgba(250, 204, 21, 0.045);
+}
+
 .live-room-recording-status {
   display: flex;
   align-items: center;
@@ -1331,6 +1336,39 @@
   background: #ef4444;
   box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.13);
   animation: live-room-recording-pulse 1.5s ease-in-out infinite;
+}
+
+.live-room-recording.is-paused .live-room-recording-dot {
+  border-color: #eab308;
+  background: #eab308;
+}
+
+.live-room-recording-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: none;
+}
+
+.live-room-recording-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #ded9eb;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.live-room-recording-action:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .live-room-recording-stop,
@@ -1538,7 +1576,16 @@
     margin-inline: 14px;
   }
 
-  .live-room-recording-stop,
+  .live-room-recording-actions {
+    width: 100%;
+  }
+
+  .live-room-recording-actions > button {
+    flex: 1;
+    width: auto;
+    padding-inline: 9px;
+  }
+
   .live-room-recording-saving {
     width: 100%;
   }

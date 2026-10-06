@@ -19,11 +19,11 @@ export function PresenterLoginChoice({ nextPath, title }: PresenterLoginChoicePr
       <section className="presenter-card presenter-login-card">
         <Link className="presenter-back" href="/dashboard"><FiArrowLeft aria-hidden="true" /> Back</Link>
         <span className="presenter-eyebrow">ZONE STREAM · REMOTE PRESENTER</span>
-        <h1>Sign in to present</h1>
-        <p>You’ve been invited to speak during <strong>{title}</strong>. Sign in with your own account to connect your camera and microphone.</p>
+        <h1>Choose your account type</h1>
+        <p>You’ve been invited to present during <strong>{title}</strong>. Choose the account you’ll use to connect. Individuals can create an account if they don’t have one; churches use the 10-digit ID created for them by the Zonal Church.</p>
         <div className="presenter-login-options">
-          <Link href={`/login-page-individual${query}`}>Individual account <span>Sign in or create an account</span></Link>
-          <Link href={`/login-page-church${query}`}>Church account <span>Continue with your church ID</span></Link>
+          <Link href={`/login-page-individual${query}`}>Individual <span>Sign in or create your individual account</span></Link>
+          <Link href={`/login-page-church${query}`}>Church <span>Sign in with your assigned 10-digit church ID</span></Link>
         </div>
       </section>
     </main>

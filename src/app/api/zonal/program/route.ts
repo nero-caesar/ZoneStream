@@ -1,3 +1,4 @@
+import { RoomServiceClient } from "livekit-server-sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { isSameOriginRequest } from "../../../../lib/auth/server";
 import { getStudioOperator } from "../../../../lib/auth/studio-operator";
@@ -35,19 +36,60 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Enter a valid live-service link." }, { status: 400 });
   }
 
+  const programTitle = body.title.trim();
+
   try {
+    const { LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET } = process.env;
+    if (!LIVEKIT_URL || !LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
+      return NextResponse.json({ error: "The streaming service is not ready yet. Please try again shortly." }, { status: 503 });
+    }
+
     const { firestore } = getFirebaseAdmin();
-    await firestore.collection("programs").doc("current").set({
-      roomName: body.roomName,
-      title: body.title.trim(),
-      shareUrl: body.shareUrl,
-      startedAt: new Date().toISOString(),
-      startedBy: operator.uid,
-      startedByType: operator.kind,
+    const programRef = firestore.collection("programs").doc("current");
+    const previousProgram = await programRef.get();
+    const expectedPreviousUpdate = previousProgram.updateTime?.toMillis() ?? null;
+
+    if (previousProgram.exists) {
+      const previousRoomName = previousProgram.get("roomName");
+      if (typeof previousRoomName === "string") {
+        const roomService = new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+        const [activeRoom] = await roomService.listRooms([previousRoomName]);
+        if (activeRoom) {
+          return NextResponse.json({ error: "A live service is already running in another Studio tab. Return to that tab or end the service before starting another." }, { status: 409 });
+        }
+
+        const previousStartedAt = previousProgram.get("startedAt");
+        const startedAtMs = typeof previousStartedAt === "string" ? Date.parse(previousStartedAt) : Number.NaN;
+        const startIsStillPending = !Number.isFinite(startedAtMs) || Date.now() - startedAtMs < 120_000;
+        if (startIsStillPending) {
+          return NextResponse.json({ error: "Another Studio tab is preparing a live service. Wait a moment, then try again if it does not appear." }, { status: 409 });
+        }
+      }
+    }
+
+    const startedAt = new Date().toISOString();
+    const started = await firestore.runTransaction(async (transaction) => {
+      const current = await transaction.get(programRef);
+      const currentUpdate = current.updateTime?.toMillis() ?? null;
+      if (currentUpdate !== expectedPreviousUpdate) return false;
+
+      transaction.set(programRef, {
+        roomName: body.roomName,
+        title: programTitle,
+        shareUrl: body.shareUrl,
+        startedAt,
+        startedBy: operator.uid,
+        startedByType: operator.kind,
+      });
+      return true;
     });
-    await recordPlatformActivity({ action: "service_started", label: `${operator.displayName} started a live service: ${body.title.trim()}`, actorType: operator.kind, actorName: operator.displayName, subjectName: body.title.trim(), roomName: body.roomName });
+    if (!started) {
+      return NextResponse.json({ error: "Another Studio tab just started a live service. Return to that tab or end its service before starting another." }, { status: 409 });
+    }
+
+    await recordPlatformActivity({ action: "service_started", label: `${operator.displayName} started a live service: ${programTitle}`, actorType: operator.kind, actorName: operator.displayName, subjectName: programTitle, roomName: body.roomName });
     return NextResponse.json({ registered: true });
   } catch {
-    return NextResponse.json({ error: "We could not save the live service details." }, { status: 503 });
+    return NextResponse.json({ error: "We could not check or save the live service details. Please try again." }, { status: 503 });
   }
 }

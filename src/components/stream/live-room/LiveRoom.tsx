@@ -10,7 +10,7 @@ import {
   type LocalVideoTrack,
   type RemoteTrack,
 } from "livekit-client";
-import { FiAlertTriangle, FiCheck, FiCopy, FiHardDrive, FiKey, FiMic, FiMicOff, FiPhoneOff, FiSquare, FiUsers, FiVideo, FiVideoOff, FiVolume2 } from "react-icons/fi";
+import { FiAlertTriangle, FiCheck, FiCopy, FiHardDrive, FiKey, FiMic, FiMicOff, FiPause, FiPhoneOff, FiPlay, FiSquare, FiUsers, FiVideo, FiVideoOff, FiVolume2 } from "react-icons/fi";
 import { FaChurch } from "react-icons/fa";
 import {
   DEFAULT_STREAM_ACCESS_POLICY,
@@ -19,7 +19,7 @@ import {
   type PublicSpecialAccessCode,
 } from "../../../lib/stream/access-policy";
 import type { StreamAudienceType, StreamRole } from "../types";
-import { createLocalDeviceRecorder, type LocalRecordingFileHandle } from "../../../lib/stream/local-recording";
+import { chooseLocalRecordingFile, createLocalDeviceRecorder, prepareLocalRecordingAudioContext, type LocalRecordingFileHandle } from "../../../lib/stream/local-recording";
 import "./live-room.css";
 
 type LiveRoomProps = {
@@ -35,6 +35,7 @@ type LiveRoomProps = {
   recordingAudioContext: AudioContext | null;
   onRecordingMessage: (message: string) => void;
   onStreamStarted?: () => void;
+  onRegisterHostLeave?: (leave: (() => Promise<boolean>) | null) => void;
   onLeave: () => void;
 };
 
@@ -126,6 +127,12 @@ function canViewerJoinWithCurrentPolicy(room: Room, audienceType: StreamAudience
   }
 }
 
+function getRecordingElapsedSeconds(startedAt: number | null, pausedDuration: number, pausedAt: number | null, now = Date.now()): number {
+  if (startedAt === null) return 0;
+  const totalPaused = pausedDuration + (pausedAt === null ? 0 : now - pausedAt);
+  return Math.max(0, Math.floor((now - startedAt - totalPaused) / 1000));
+}
+
 function AttachedVideo({ track, muted = false }: { track: Track; muted?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -155,6 +162,7 @@ export default function LiveRoom({
   recordingAudioContext,
   onRecordingMessage,
   onStreamStarted,
+  onRegisterHostLeave,
   onLeave,
 }: LiveRoomProps) {
   const [room, setRoom] = useState<Room | null>(null);
@@ -184,7 +192,7 @@ export default function LiveRoom({
   const [audioNeedsGesture, setAudioNeedsGesture] = useState(false);
   const [error, setError] = useState("");
   const [ending, setEnding] = useState(false);
-  const [recordingState, setRecordingState] = useState<"idle" | "recording" | "saving" | "saved" | "error">("idle");
+  const [recordingState, setRecordingState] = useState<"idle" | "recording" | "paused" | "saving" | "saved" | "error">("idle");
   const [recordingElapsed, setRecordingElapsed] = useState(0);
   const [recordingStartedTime, setRecordingStartedTime] = useState("");
   const [recordingFileName, setRecordingFileName] = useState("");
@@ -216,8 +224,11 @@ export default function LiveRoom({
   const applySourceSelectionRef = useRef<(selection: { mode?: unknown; inviteId?: unknown; flierKey?: unknown; flierFileName?: unknown }) => void>(() => undefined);
   const selectBroadcastSourceRef = useRef<(mode: SourceMode, inviteId?: string) => Promise<void>>(async () => undefined);
   const recordingStartedAtRef = useRef<number | null>(null);
+  const recordingPausedAtRef = useRef<number | null>(null);
+  const recordingPausedDurationRef = useRef(0);
   const stopRecordingPromiseRef = useRef<Promise<void> | null>(null);
   const stopRecordingRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const broadcastEndRequestedRef = useRef(false);
   const individualCountRef = useRef(0);
   const connectedAudienceRef = useRef(new Map<string, StreamAttendee>());
   const streamStartNotifiedRef = useRef(false);
@@ -276,6 +287,14 @@ export default function LiveRoom({
     if (!recorder) return Promise.resolve();
 
     localRecorderRef.current = null;
+    const stoppedAt = Date.now();
+    setRecordingElapsed(getRecordingElapsedSeconds(
+      recordingStartedAtRef.current,
+      recordingPausedDurationRef.current,
+      recordingPausedAtRef.current,
+      stoppedAt,
+    ));
+    recordingPausedAtRef.current = null;
     setRecordingState("saving");
     const stopPromise = (async () => {
       try {
@@ -301,8 +320,13 @@ export default function LiveRoom({
     stopRecordingRef.current = stopRecording;
   }, [stopRecording]);
 
-  const startRecording = useCallback(async (activeRoom: Room, isMounted: () => boolean) => {
-    if (role !== "host" || localRecorderRef.current) return;
+  const startRecording = useCallback(async (
+    activeRoom: Room,
+    isMounted: () => boolean,
+    fileHandle: LocalRecordingFileHandle | null = recordingFileHandle,
+    audioContext: AudioContext | null = recordingAudioContext,
+  ) => {
+    if (role !== "host" || localRecorderRef.current || stopRecordingPromiseRef.current || activeRoom.state !== ConnectionState.Connected) return;
     const videoElement = recordingVideoRef.current;
     if (!videoElement) return;
 
@@ -319,8 +343,8 @@ export default function LiveRoom({
         videoElement,
         videoTrack: isFlier ? null : selectedPresenterTracks?.video?.mediaStreamTrack ?? cameraPublication?.track?.mediaStreamTrack ?? null,
         audioTrack: selection.mode === "flier" ? null : selectedPresenterTracks?.audio?.mediaStreamTrack ?? microphonePublication?.track?.mediaStreamTrack ?? null,
-        audioContext: recordingAudioContext,
-        fileHandle: recordingFileHandle,
+        audioContext: audioContext?.state === "closed" ? null : audioContext,
+        fileHandle,
         title,
       });
       localRecorder.setVideoImage(isFlier ? flierImageRef.current : null);
@@ -333,19 +357,91 @@ export default function LiveRoom({
 
       localRecorderRef.current = localRecorder;
       recordingStartedAtRef.current = Date.now();
+      recordingPausedAtRef.current = null;
+      recordingPausedDurationRef.current = 0;
       setRecordingStartedTime(new Date(recordingStartedAtRef.current).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
       setRecordingElapsed(0);
       setRecordingState("recording");
-      showRecordingMessage(recordingFileHandle
-        ? "Recording started automatically. It is being saved on this device."
-        : "Recording started automatically. Your browser will download it to this device when recording stops.");
+      showRecordingMessage(fileHandle
+        ? "Recording started. It is being saved on this device."
+        : "Recording started. Your browser will download it to this device when recording stops.");
     } catch (recordingError) {
+      if (audioContext && audioContext.state !== "closed") void audioContext.close().catch(() => undefined);
       const message = recordingError instanceof Error ? recordingError.message : "Recording could not start on this device.";
       setRecordingState("error");
       setError(message);
       showRecordingMessage(message);
     }
   }, [recordingAudioContext, recordingFileHandle, role, showRecordingMessage, title]);
+
+  const startAnotherRecording = useCallback(async () => {
+    const activeRoom = roomRef.current;
+    if (role !== "host" || !activeRoom || activeRoom.state !== ConnectionState.Connected) return;
+
+    const nextAudioContext = prepareLocalRecordingAudioContext();
+    try {
+      const nextFileHandle = await chooseLocalRecordingFile(title);
+      if (activeRoom.state !== ConnectionState.Connected || roomRef.current !== activeRoom) {
+        if (nextAudioContext && nextAudioContext.state !== "closed") void nextAudioContext.close().catch(() => undefined);
+        return;
+      }
+      const pendingStop = stopRecordingPromiseRef.current;
+      if (pendingStop) await pendingStop;
+      if (activeRoom.state !== ConnectionState.Connected || roomRef.current !== activeRoom) {
+        if (nextAudioContext && nextAudioContext.state !== "closed") void nextAudioContext.close().catch(() => undefined);
+        return;
+      }
+      await startRecording(
+        activeRoom,
+        () => roomRef.current === activeRoom && activeRoom.state === ConnectionState.Connected,
+        nextFileHandle,
+        nextAudioContext,
+      );
+    } catch (recordingError) {
+      if (nextAudioContext && nextAudioContext.state !== "closed") void nextAudioContext.close().catch(() => undefined);
+      if (recordingError instanceof DOMException && recordingError.name === "AbortError") return;
+      const message = recordingError instanceof Error ? recordingError.message : "A new recording could not start.";
+      setError(message);
+      showRecordingMessage(message);
+    }
+  }, [role, showRecordingMessage, startRecording, title]);
+
+  const pauseRecording = useCallback(() => {
+    const recorder = localRecorderRef.current;
+    if (!recorder || recordingState !== "recording") return;
+    try {
+      if (!recorder.pause()) return;
+      recordingPausedAtRef.current = Date.now();
+      setRecordingElapsed(getRecordingElapsedSeconds(
+        recordingStartedAtRef.current,
+        recordingPausedDurationRef.current,
+        recordingPausedAtRef.current,
+      ));
+      setRecordingState("paused");
+      showRecordingMessage("Recording paused. The live service is still on air.");
+    } catch {
+      const message = "Recording could not be paused. It is still recording.";
+      setError(message);
+      showRecordingMessage(message);
+    }
+  }, [recordingState, showRecordingMessage]);
+
+  const resumeRecording = useCallback(() => {
+    const recorder = localRecorderRef.current;
+    if (!recorder || recordingState !== "paused") return;
+    try {
+      if (!recorder.resume()) return;
+      const pausedAt = recordingPausedAtRef.current;
+      if (pausedAt !== null) recordingPausedDurationRef.current += Date.now() - pausedAt;
+      recordingPausedAtRef.current = null;
+      setRecordingState("recording");
+      showRecordingMessage("Recording resumed.");
+    } catch {
+      const message = "Recording could not resume. Stop and start a new recording to continue.";
+      setError(message);
+      showRecordingMessage(message);
+    }
+  }, [recordingState, showRecordingMessage]);
 
   const refreshRecordingSources = useCallback((activeRoom: Room) => {
     const selection = sourceSelectionRef.current;
@@ -987,6 +1083,15 @@ export default function LiveRoom({
     return () => {
       isMounted = false;
       const stopPromise = role === "host" ? stopRecordingRef.current() : Promise.resolve();
+      if (role === "host" && activeRoom && !broadcastEndRequestedRef.current) {
+        broadcastEndRequestedRef.current = true;
+        void fetch("/api/stream/end", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ roomName }),
+          keepalive: true,
+        }).catch(() => undefined);
+      }
       if (recordingAudioContext && recordingAudioContext.state !== "closed") {
         void stopPromise.then(() => {
           if (recordingAudioContext.state !== "closed") return recordingAudioContext.close().catch(() => undefined);
@@ -1020,8 +1125,11 @@ export default function LiveRoom({
   useEffect(() => {
     if (recordingState !== "recording") return;
     const interval = window.setInterval(() => {
-      const startedAt = recordingStartedAtRef.current;
-      if (startedAt !== null) setRecordingElapsed(Math.floor((Date.now() - startedAt) / 1000));
+      setRecordingElapsed(getRecordingElapsedSeconds(
+        recordingStartedAtRef.current,
+        recordingPausedDurationRef.current,
+        recordingPausedAtRef.current,
+      ));
     }, 1000);
     return () => window.clearInterval(interval);
   }, [recordingState]);
@@ -1055,13 +1163,14 @@ export default function LiveRoom({
     }
   }, [microphoneEnabled, refreshRecordingSources, room, syncProgramMonitor]);
 
-  const leaveRoom = useCallback(async () => {
-    if (ending) return;
+  const leaveRoom = useCallback(async (): Promise<boolean> => {
+    if (ending) return false;
     setEnding(true);
     setError("");
 
-    if (role === "host" && room) {
+    if (role === "host") {
       try {
+        await stopRecordingRef.current();
         const response = await fetch("/api/stream/end", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1069,16 +1178,47 @@ export default function LiveRoom({
         });
         const result = (await response.json()) as { error?: string };
         if (!response.ok) throw new Error(result.error ?? "Could not end the broadcast.");
+        broadcastEndRequestedRef.current = true;
       } catch (leaveError) {
         setError(leaveError instanceof Error ? leaveError.message : "Could not end the broadcast.");
         setEnding(false);
-        return;
+        return false;
       }
     }
 
     await room?.disconnect();
     onLeave();
+    return true;
   }, [ending, onLeave, role, room, roomName]);
+
+  useEffect(() => {
+    if (role !== "host" || !onRegisterHostLeave) return;
+    onRegisterHostLeave(leaveRoom);
+    return () => onRegisterHostLeave(null);
+  }, [leaveRoom, onRegisterHostLeave, role]);
+
+  useEffect(() => {
+    if (role !== "host") return;
+
+    const endBroadcastOnBrowserNavigation = () => {
+      if (broadcastEndRequestedRef.current) return;
+      broadcastEndRequestedRef.current = true;
+      void stopRecordingRef.current();
+      void fetch("/api/stream/end", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomName }),
+        keepalive: true,
+      }).catch(() => undefined);
+    };
+
+    window.addEventListener("popstate", endBroadcastOnBrowserNavigation);
+    window.addEventListener("pagehide", endBroadcastOnBrowserNavigation);
+    return () => {
+      window.removeEventListener("popstate", endBroadcastOnBrowserNavigation);
+      window.removeEventListener("pagehide", endBroadcastOnBrowserNavigation);
+    };
+  }, [role, roomName]);
 
   const enableAudio = useCallback(async () => {
     try {
@@ -1690,31 +1830,42 @@ export default function LiveRoom({
 
       {role === "host" ? (
         <>
-        <div className={`live-room-recording ${recordingState === "recording" ? "is-recording" : ""}`} aria-live="polite">
+        <div className={`live-room-recording${recordingState === "recording" ? " is-recording" : recordingState === "paused" ? " is-paused" : ""}`} aria-live="polite">
           <div className="live-room-recording-status">
             <span className="live-room-recording-dot" aria-hidden="true" />
             <span>
-              <strong>{recordingState === "recording" ? "Recording this service" : recordingState === "saving" ? "Saving recording" : recordingState === "saved" ? "Recording saved" : recordingState === "error" ? "Recording unavailable" : "Automatic recording"}</strong>
+              <strong>{recordingState === "recording" ? "Recording this service" : recordingState === "paused" ? "Recording paused" : recordingState === "saving" ? "Saving recording" : recordingState === "saved" ? "Recording saved" : recordingState === "error" ? "Recording unavailable" : "Automatic recording"}</strong>
               <small>
-                {recordingState === "recording"
-                  ? `${Math.floor(recordingElapsed / 60).toString().padStart(2, "0")}:${(recordingElapsed % 60).toString().padStart(2, "0")} recorded · started ${recordingStartedTime} · saved on this device`
+                {recordingState === "recording" || recordingState === "paused"
+                  ? `${Math.floor(recordingElapsed / 60).toString().padStart(2, "0")}:${(recordingElapsed % 60).toString().padStart(2, "0")} recorded${recordingState === "paused" ? " · paused" : ""} · started ${recordingStartedTime} · saved on this device`
                   : recordingState === "saved"
-                    ? recordingFileName
+                    ? `${recordingFileName} · saved on this device`
                     : recordingState === "saving"
                       ? "Finishing the video file on this device…"
                       : "Starts when the live service connects"}
-              </small>
+            </small>
             </span>
           </div>
-          {recordingState === "recording" ? (
-            <button className="live-room-recording-stop" type="button" onClick={() => void stopRecording()}>
-              <FiSquare aria-hidden="true" /> Stop recording
-            </button>
+          {recordingState === "recording" || recordingState === "paused" ? (
+            <div className="live-room-recording-actions">
+              {recordingState === "recording" ? (
+                <button className="live-room-recording-action" type="button" onClick={pauseRecording}>
+                  <FiPause aria-hidden="true" /> Pause recording
+                </button>
+              ) : (
+                <button className="live-room-recording-action" type="button" onClick={resumeRecording}>
+                  <FiPlay aria-hidden="true" /> Resume recording
+                </button>
+              )}
+              <button className="live-room-recording-stop" type="button" onClick={() => void stopRecording()}>
+                <FiSquare aria-hidden="true" /> Stop and save
+              </button>
+            </div>
           ) : recordingState === "saving" ? (
             <span className="live-room-recording-saving"><FiHardDrive aria-hidden="true" /> Saving…</span>
-          ) : recordingState === "error" && connected ? (
-            <button className="live-room-recording-stop" type="button" onClick={() => room && void startRecording(room, () => true)}>
-              Try recording again
+          ) : (recordingState === "saved" || recordingState === "error") && connected ? (
+            <button className="live-room-recording-action live-room-recording-restart" type="button" onClick={() => void startAnotherRecording()}>
+              <FiPlay aria-hidden="true" /> {recordingState === "saved" ? "Start a new recording" : "Try a new recording"}
             </button>
           ) : null}
         </div>
