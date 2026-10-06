@@ -1,6 +1,6 @@
-import { createRequire } from "node:module";
-
-const requireFromProject = createRequire(`${process.cwd()}/package.json`);
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
 
 export function getFirebaseAdmin() {
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
@@ -17,12 +17,7 @@ export function getFirebaseAdmin() {
     throw new Error("ZoneStream is not ready to complete this request right now.");
   }
 
-  // Load Firebase Admin only when a server request actually needs it. This keeps
-  // unauthenticated requests and server-rendered pages from crashing at module load.
-  const { cert, getApps, initializeApp } = requireFromProject("firebase-admin/app") as typeof import("firebase-admin/app");
-  const { getAuth } = requireFromProject("firebase-admin/auth") as typeof import("firebase-admin/auth");
-  const { getFirestore } = requireFromProject("firebase-admin/firestore") as typeof import("firebase-admin/firestore");
-
+  // Initialize Firebase Admin only when a server request actually needs it.
   const appName = "zonestream-admin";
   let app: ReturnType<typeof initializeApp>;
   try {
