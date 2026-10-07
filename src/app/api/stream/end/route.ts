@@ -8,6 +8,7 @@ import { isPlatformViewerPaused, parseStreamAccessPolicy, serializeStreamAccessP
 import { decryptPrivateSpecialAccessState, encryptPrivateSpecialAccessState } from "../../../../lib/stream/special-access-crypto";
 import { recordDeveloperSpecialAccessConnection } from "../../../../lib/stream/developer-special-access";
 import { getProgramMonitorRoomName } from "../../../../lib/stream/program-monitor";
+import { finishAttendance, reconcileAttendance } from "../../../../lib/stream/attendance";
 
 export const runtime = "nodejs";
 
@@ -36,6 +37,9 @@ export async function POST(request: NextRequest) {
   try {
     const roomService = new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
     const [activeRoom] = await roomService.listRooms([body.roomName]);
+    const finalParticipants = activeRoom ? await roomService.listParticipants(body.roomName) : [];
+    const attendanceEndedAt = new Date().toISOString();
+    await reconcileAttendance(body.roomName, finalParticipants, activeRoom?.metadata || "");
     if (activeRoom) {
       const participants = await roomService.listParticipants(body.roomName).catch(() => []);
       const identities = new Set(participants.map((participant) => participant.identity));
@@ -80,7 +84,8 @@ export async function POST(request: NextRequest) {
     }));
     if (activePresenterInvites.docs.some((invite) => invite.data().active === true)) await inviteBatch.commit().catch(() => undefined);
     await roomService.deleteRoom(getProgramMonitorRoomName(body.roomName, LIVEKIT_API_SECRET)).catch(() => undefined);
-    await roomService.deleteRoom(body.roomName);
+    if (activeRoom) await roomService.deleteRoom(body.roomName);
+    await finishAttendance(body.roomName, finalParticipants, attendanceEndedAt);
     await recordPlatformActivity({ action: "service_ended", label: `${operator.displayName} ended the live service`, actorType: operator.kind, actorName: operator.displayName, roomName: body.roomName });
     try {
       const { firestore } = getFirebaseAdmin();

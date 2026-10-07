@@ -106,8 +106,8 @@ export async function createLocalDeviceRecorder({
   let capturedVideoTrack: MediaStreamTrack | null = null;
   let attachedVideoImage: HTMLImageElement | null = null;
   const canvas = document.createElement("canvas");
-  canvas.width = 1280;
-  canvas.height = 720;
+  canvas.width = 1920;
+  canvas.height = 1080;
   const context = canvas.getContext("2d");
   if (!context || typeof canvas.captureStream !== "function") {
     throw new Error("This browser does not support local video recording.");
@@ -145,7 +145,7 @@ export async function createLocalDeviceRecorder({
 
   setVideoTrack(videoTrack);
   drawVideoFrame();
-  canvasStream = canvas.captureStream(24);
+  canvasStream = canvas.captureStream(30);
   capturedVideoTrack = canvasStream.getVideoTracks()[0] ?? null;
 
   if (!capturedVideoTrack) throw new Error("The camera did not provide a video track for recording.");
@@ -190,7 +190,7 @@ export async function createLocalDeviceRecorder({
   let recorder: MediaRecorder;
   let writable: LocalRecordingWritable | null = null;
   try {
-    recorder = new MediaRecorder(recordingStream, { mimeType });
+    recorder = new MediaRecorder(recordingStream, { mimeType, videoBitsPerSecond: 8_000_000, audioBitsPerSecond: 192_000 });
     writable = fileHandle ? await fileHandle.createWritable() : null;
   } catch (error) {
     await releaseCaptureResources();

@@ -5,6 +5,7 @@ import { ConnectionState, Room, RoomEvent, Track, type LocalVideoTrack } from "l
 import { FiArrowLeft, FiMic, FiMicOff, FiPhoneOff, FiVideo, FiVideoOff } from "react-icons/fi";
 import Link from "next/link";
 import ProgramMonitor from "./ProgramMonitor";
+import { STREAM_ROOM_OPTIONS } from "../../../lib/stream/media-quality";
 import "./remote-presenter.css";
 
 type PresenterLoginChoiceProps = {
@@ -50,12 +51,17 @@ export default function RemotePresenter({
   const videoRef = useRef<HTMLVideoElement>(null);
   const roomRef = useRef<Room | null>(null);
   const inviteIdRef = useRef("");
+  const participantSidRef = useRef("");
   const isConnectedRef = useRef(false);
 
   const reportConnection = useCallback((connected: boolean) => {
     if (isConnectedRef.current === connected) return;
     isConnectedRef.current = connected;
     window.dispatchEvent(new CustomEvent("zonestream:stream-state", { detail: { active: connected } }));
+    if (participantSidRef.current) void fetch("/api/stream/attendance", {
+      method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+      body: JSON.stringify({ roomName, sid: participantSidRef.current, event: connected ? "connected" : "disconnected" }),
+    }).catch(() => undefined);
     void fetch("/api/stream/presenter-activity", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -92,7 +98,7 @@ export default function RemotePresenter({
         throw new Error(tokenResult.error ?? "Could not prepare the presenter connection.");
       }
 
-      const activeRoom = new Room({ adaptiveStream: true, dynacast: true });
+      const activeRoom = new Room(STREAM_ROOM_OPTIONS);
       roomRef.current = activeRoom;
       inviteIdRef.current = tokenResult.inviteId;
       activeRoom.on(RoomEvent.ConnectionStateChanged, (state) => setConnectionState(state));
@@ -107,6 +113,7 @@ export default function RemotePresenter({
       });
 
       await activeRoom.connect(tokenResult.serverUrl, tokenResult.participantToken);
+      participantSidRef.current = activeRoom.localParticipant.sid;
       await activeRoom.localParticipant.enableCameraAndMicrophone();
       const localVideo = activeRoom.localParticipant.getTrackPublication(Track.Source.Camera)?.track;
       const localAudio = activeRoom.localParticipant.getTrackPublication(Track.Source.Microphone)?.track;
@@ -142,6 +149,10 @@ export default function RemotePresenter({
         void activeRoom.disconnect();
       }
       if (isConnectedRef.current) {
+        if (participantSidRef.current) void fetch("/api/stream/attendance", {
+          method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+          body: JSON.stringify({ roomName, sid: participantSidRef.current, event: "disconnected" }),
+        }).catch(() => undefined);
         isConnectedRef.current = false;
         window.dispatchEvent(new CustomEvent("zonestream:stream-state", { detail: { active: false } }));
         void fetch("/api/stream/presenter-activity", {

@@ -8,6 +8,7 @@ import SignOutButton from "../../sign-out-button/SignOutButton";
 import HistoryBackButton from "../../history-back-button/HistoryBackButton";
 import ZonalPasswordRecovery from "../../zonal-password-recovery/ZonalPasswordRecovery";
 import LiveRoom from "../live-room/LiveRoom";
+import ServiceReportDialog from "../service-report/ServiceReportDialog";
 import type { StreamSession } from "../types";
 import { chooseLocalRecordingFile, prepareLocalRecordingAudioContext, type LocalRecordingFileHandle } from "../../../lib/stream/local-recording";
 import "./stream-studio.css";
@@ -178,6 +179,7 @@ async function uploadVideoToR2(plan: R2UploadPlan, file: File, onProgress: (prog
 
 export default function StreamStudio({ zonalName, developerMode = false }: { zonalName: string; developerMode?: boolean }) {
   const [session, setSession] = useState<StreamSession | null>(null);
+  const [reportRoomName, setReportRoomName] = useState("");
   const [leaveActiveBroadcast, setLeaveActiveBroadcast] = useState<(() => Promise<boolean>) | null>(null);
   const [studioMode, setStudioMode] = useState<"choose" | "stream" | "upload">("choose");
   const [title, setTitle] = useState("");
@@ -203,10 +205,11 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
   }, []);
 
   const handleHostRoomLeave = useCallback(() => {
+    if (session) setReportRoomName(session.roomName);
     setSession(null);
     setRecordingFileHandle(null);
     setStudioMode("choose");
-  }, []);
+  }, [session]);
 
   const refreshStudioRecordings = useCallback(async () => {
     setRecordingsLoading(true);
@@ -530,6 +533,7 @@ export default function StreamStudio({ zonalName, developerMode = false }: { zon
           </div>
         )}
 
+        {reportRoomName ? <ServiceReportDialog roomName={reportRoomName} onClose={() => setReportRoomName("")} /> : null}
         {recordingToast ? <div className="live-room-toast" role="status"><FiHardDrive aria-hidden="true" /><span>{recordingToast}</span></div> : null}
 
         <footer className="stream-studio-footer">

@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
         startedBy: operator.uid,
         startedByType: operator.kind,
       });
+      transaction.set(firestore.collection("serviceReports").doc(body.roomName as string), { roomName: body.roomName, title: programTitle, startedAt, endedAt: null });
       return true;
     });
     if (!started) {

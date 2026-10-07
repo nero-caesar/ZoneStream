@@ -7,6 +7,7 @@ import { getFirebaseAdmin } from "../../../../lib/firebase/admin";
 import { isPlatformViewerPaused, parseStreamAccessPolicy, serializeStreamAccessPolicy } from "../../../../lib/stream/access-policy";
 import { decryptPrivateSpecialAccessState, encryptPrivateSpecialAccessState } from "../../../../lib/stream/special-access-crypto";
 import { recordDeveloperSpecialAccessConnection } from "../../../../lib/stream/developer-special-access";
+import { recordAttendance } from "../../../../lib/stream/attendance";
 
 export const runtime = "nodejs";
 
@@ -21,6 +22,8 @@ export async function POST(request: NextRequest) {
     audienceType?: unknown;
     participantName?: unknown;
     participantIdentity?: unknown;
+    participantSid?: unknown;
+    participantMetadata?: unknown;
     specialAccessCodeId?: unknown;
     developerSpecialAccessCodeId?: unknown;
   };
@@ -32,7 +35,7 @@ export async function POST(request: NextRequest) {
   if (
     typeof body.roomName !== "string" || !/^[a-z0-9][a-z0-9-]{5,79}$/i.test(body.roomName) ||
     (body.event !== "connected" && body.event !== "disconnected") ||
-    (body.audienceType !== "church" && body.audienceType !== "individual")
+    (body.audienceType !== "church" && body.audienceType !== "individual" && body.audienceType !== "presenter")
   ) return NextResponse.json({ error: "The live activity was invalid." }, { status: 400 });
 
   const participantName = typeof body.participantName === "string" ? body.participantName.trim().slice(0, 120) : "A viewer";
@@ -44,6 +47,14 @@ export async function POST(request: NextRequest) {
     const { firestore } = getFirebaseAdmin();
     const program = await firestore.collection("programs").doc("current").get();
     if (!program.exists || program.get("roomName") !== body.roomName) return NextResponse.json({ recorded: false }, { status: 409 });
+    if (typeof body.participantSid === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(body.participantSid) && typeof body.participantMetadata === "string") {
+      let roomMetadata = "";
+      if (LIVEKIT_URL && LIVEKIT_API_KEY && LIVEKIT_API_SECRET) {
+        const [room] = await new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET).listRooms([body.roomName]);
+        roomMetadata = room?.metadata || "";
+      }
+      await recordAttendance(body.roomName, { sid: body.participantSid, identity: participantIdentity, name: participantName, metadata: body.participantMetadata }, body.event, undefined, roomMetadata);
+    }
 
     if (developerSpecialAccessCodeId) {
       if (participantIdentity && LIVEKIT_URL && LIVEKIT_API_KEY && LIVEKIT_API_SECRET) {
@@ -82,7 +93,7 @@ export async function POST(request: NextRequest) {
   await recordPlatformActivity({
     action: `${body.audienceType}_${body.event}`,
     label: `${participantName} ${body.event === "connected" ? "connected to" : "disconnected from"} the live service`,
-    actorType: body.audienceType,
+    actorType: body.audienceType === "presenter" ? "system" : body.audienceType,
     actorName: participantName,
     subjectName: audience,
     roomName: body.roomName,

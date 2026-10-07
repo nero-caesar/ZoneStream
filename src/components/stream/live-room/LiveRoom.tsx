@@ -7,6 +7,7 @@ import {
   Room,
   RoomEvent,
   Track,
+  VideoQuality,
   type LocalVideoTrack,
   type RemoteTrack,
 } from "livekit-client";
@@ -19,6 +20,7 @@ import {
   type PublicSpecialAccessCode,
 } from "../../../lib/stream/access-policy";
 import type { StreamAudienceType, StreamRole } from "../types";
+import { STREAM_ROOM_OPTIONS } from "../../../lib/stream/media-quality";
 import { chooseLocalRecordingFile, createLocalDeviceRecorder, prepareLocalRecordingAudioContext, type LocalRecordingFileHandle } from "../../../lib/stream/local-recording";
 import "./live-room.css";
 
@@ -175,6 +177,7 @@ export default function LiveRoom({
   const [churchActivity, setChurchActivity] = useState<ChurchActivity[]>([]);
   const [studioNotice, setStudioNotice] = useState("");
   const [viewerCount, setViewerCount] = useState(0);
+  const [serverIndividualCount, setServerIndividualCount] = useState<number | null>(null);
   const [allAccess, setAllAccess] = useState(DEFAULT_STREAM_ACCESS_POLICY.allAccess);
   const [churchAccess, setChurchAccess] = useState(DEFAULT_STREAM_ACCESS_POLICY.churchAccess);
   const [individualAccess, setIndividualAccess] = useState(DEFAULT_STREAM_ACCESS_POLICY.individualAccess);
@@ -450,6 +453,11 @@ export default function LiveRoom({
       ? selection.inviteId
       : "";
     const presenterTracks = selectedInviteId ? presenterSourceTracksRef.current.get(selectedInviteId) : undefined;
+    activeRoom.remoteParticipants.forEach((participant) => {
+      let inviteId = "";
+      try { inviteId = JSON.parse(participant.metadata || "{}").remotePresenterInviteId || ""; } catch { /* Ignore invalid metadata. */ }
+      participant.videoTrackPublications.forEach((publication) => publication.setVideoQuality(inviteId === selectedInviteId && !isFlier ? VideoQuality.HIGH : VideoQuality.LOW));
+    });
     const cameraTrack = activeRoom.localParticipant.getTrackPublication(Track.Source.Camera)?.track;
     const microphoneTrack = activeRoom.localParticipant.getTrackPublication(Track.Source.Microphone)?.track;
     localRecorderRef.current?.setVideoTrack(isFlier ? null : presenterTracks?.video?.mediaStreamTrack ?? cameraTrack?.mediaStreamTrack ?? null);
@@ -533,7 +541,7 @@ export default function LiveRoom({
         throw new Error(result.error ?? "The presenter program monitor could not connect.");
       }
 
-      const monitorRoom = new Room({ adaptiveStream: true, dynacast: true });
+      const monitorRoom = new Room(STREAM_ROOM_OPTIONS);
       await monitorRoom.connect(result.serverUrl, result.participantToken);
       if (!isMounted()) {
         await monitorRoom.disconnect();
@@ -784,7 +792,7 @@ export default function LiveRoom({
     }
   }, [roomName]);
 
-  const reportParticipantActivity = useCallback((event: "connected" | "disconnected", participant: { identity: string; name?: string; metadata?: string }) => {
+  const reportParticipantActivity = useCallback((event: "connected" | "disconnected", participant: { sid: string; identity: string; name?: string; metadata?: string }) => {
     if (role !== "host") return;
     try {
       const metadata = JSON.parse(participant.metadata ?? "{}") as {
@@ -792,7 +800,7 @@ export default function LiveRoom({
         specialAccessCodeId?: unknown;
         developerSpecialAccessCodeId?: unknown;
       };
-      if (metadata.audienceType !== "church" && metadata.audienceType !== "individual") return;
+      if (metadata.audienceType !== "church" && metadata.audienceType !== "individual" && metadata.audienceType !== "presenter") return;
       void fetch("/api/stream/activity", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -802,6 +810,8 @@ export default function LiveRoom({
           audienceType: metadata.audienceType,
           participantName: participant.name,
           participantIdentity: participant.identity,
+          participantSid: participant.sid,
+          participantMetadata: participant.metadata,
           specialAccessCodeId: typeof metadata.specialAccessCodeId === "string" ? metadata.specialAccessCodeId : undefined,
           developerSpecialAccessCodeId: typeof metadata.developerSpecialAccessCodeId === "string" ? metadata.developerSpecialAccessCodeId : undefined,
         }),
@@ -810,6 +820,49 @@ export default function LiveRoom({
       // Ignore malformed participant metadata.
     }
   }, [role, roomName]);
+
+  useEffect(() => {
+    if (!room || role !== "host") return;
+    let disposed = false;
+    let inFlight = false;
+    const refresh = async () => {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const response = await fetch(`/api/stream/attendance?roomName=${encodeURIComponent(roomName)}`, { cache: "no-store" });
+        if (!response.ok) return;
+        const result = await response.json() as { attendees?: (StreamAttendee & { accountUid?: string })[] };
+        if (!disposed && result.attendees) {
+          setServerIndividualCount(new Set(result.attendees.filter((entry) => entry.audienceType === "individual").map((entry) => entry.accountUid || entry.identity)).size);
+          setAttendees(result.attendees);
+        }
+      } catch { /* Keep the last confirmed total while a refresh is retried. */ }
+      finally { inFlight = false; }
+    };
+    void refresh();
+    const interval = window.setInterval(() => void refresh(), 5000);
+    room.on(RoomEvent.ParticipantConnected, refresh);
+    room.on(RoomEvent.ParticipantDisconnected, refresh);
+    return () => { disposed = true; window.clearInterval(interval); room.off(RoomEvent.ParticipantConnected, refresh); room.off(RoomEvent.ParticipantDisconnected, refresh); };
+  }, [role, room, roomName]);
+
+  useEffect(() => {
+    if (!room || role !== "viewer" || developerPreview) return;
+    const sid = room.localParticipant.sid;
+    let connectedRecorded = false;
+    const report = (event: "connected" | "disconnected") => {
+      void fetch("/api/stream/attendance", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomName, sid, event }), keepalive: true }).then((response) => {
+          if (event === "connected" && response.ok) connectedRecorded = true;
+        }).catch(() => undefined);
+    };
+    report("connected");
+    const interval = window.setInterval(() => { if (!connectedRecorded && room.state === ConnectionState.Connected) report("connected"); }, 15000);
+    const leave = () => report("disconnected");
+    room.on(RoomEvent.Disconnected, leave);
+    window.addEventListener("pagehide", leave);
+    return () => { window.clearInterval(interval); room.off(RoomEvent.Disconnected, leave); window.removeEventListener("pagehide", leave); leave(); };
+  }, [role, room, roomName, developerPreview]);
 
   useEffect(() => {
     if (role !== "host") return;
@@ -849,7 +902,7 @@ export default function LiveRoom({
           throw new Error(details.error ?? "Could not prepare the stream connection.");
         }
 
-        const nextRoom = new Room({ adaptiveStream: true, dynacast: true });
+        const nextRoom = new Room({ ...STREAM_ROOM_OPTIONS, adaptiveStream: role !== "host" });
         activeRoom = nextRoom;
         roomRef.current = nextRoom;
 
@@ -1351,6 +1404,7 @@ export default function LiveRoom({
       ? "Studio"
       : selectedPresenterInvite?.presenterName || selectedPresenterFeed?.name || "Presenter";
   const individualAttendees = attendees.filter((attendee) => attendee.audienceType === "individual");
+  const individualTotal = serverIndividualCount ?? individualAttendees.length;
   const churchAttendees = attendees.filter((attendee) => attendee.audienceType === "church");
   const connectedChurchCount = registeredChurches.filter((church) => church.connected).length || churchAttendees.length;
   const audienceConnections = viewerCount + (connectionState === ConnectionState.Connected ? 1 : 0);
@@ -1406,7 +1460,7 @@ export default function LiveRoom({
         </div>
         <div className="live-room-viewers" aria-live="polite">
           <span className="live-room-viewers-icon" aria-hidden="true">◉</span>
-          <span>{role === "host" ? `${individualAttendees.length} individual${individualAttendees.length === 1 ? "" : "s"}` : developerPreview ? "Private preview" : `${audienceConnections} connection${audienceConnections === 1 ? "" : "s"} watching`}</span>
+          <span>{role === "host" ? `${individualTotal} individual${individualTotal === 1 ? "" : "s"}` : developerPreview ? "Private preview" : `${audienceConnections} connection${audienceConnections === 1 ? "" : "s"} watching`}</span>
         </div>
       </div>
 
@@ -1812,8 +1866,8 @@ export default function LiveRoom({
               <p className="live-room-access-footnote"><FiUsers aria-hidden="true" /> {!allAccess
               ? "Churches and regular individuals are off. Special-access guests follow the controls in this section."
               : individualAccess
-                ? `${individualAttendees.length} individual${individualAttendees.length === 1 ? "" : "s"} connected. Turning regular individual access off leaves special-access guests connected.`
-                : `${individualAttendees.length} individual${individualAttendees.length === 1 ? "" : "s"} connected, including special-access guests. Regular access is paused; churches remain allowed.`}</p>
+                ? `${individualTotal} individual${individualTotal === 1 ? "" : "s"} connected. Turning regular individual access off leaves special-access guests connected.`
+                : `${individualTotal} individual${individualTotal === 1 ? "" : "s"} connected, including special-access guests. Regular access is paused; churches remain allowed.`}</p>
           </section>
         </div>
       ) : null}
